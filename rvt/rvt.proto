@@ -1,0 +1,60 @@
+syntax = "proto3";
+
+package ptmux.rvt.v1;
+
+option go_package = "rvt";
+
+service Terminal {
+    rpc Share(stream ShareMessage) returns (stream ShareMessage);
+}
+
+message ShareMessage {
+    string id = 1;
+    oneof Event {
+        InitMessage Init = 2;
+        FdMessage Fd = 3;
+        ResizeMessage Resize = 4;
+        StateMessage State = 5;
+    }
+}
+
+message InitMessage {
+}
+
+message FdMessage {
+    uint32 fd = 1;
+    bool eof = 2;
+    bytes data = 3;
+}
+
+message ResizeMessage {
+    uint32 cols = 1;
+    uint32 rows = 2;
+}
+
+message StateMessage {
+    int64 cols = 1;
+    int64 rows = 2;
+    uint32 mode = 3;
+    string title = 4;
+    Cursor cursor = 5;
+    repeated Line lines = 6;
+}
+
+message Line {
+    repeated Glyph glyphs = 1;
+}
+
+message Glyph {
+    int32 rune = 1;
+    int32 mode = 2;
+    uint32 fg = 3;
+    uint32 bg = 4;
+}
+
+message Cursor {
+    int64 x = 1;
+    int64 y = 2;
+    uint32 state = 3;
+    Glyph attr = 4;
+}
