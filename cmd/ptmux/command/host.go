@@ -2,7 +2,6 @@ package command
 
 import (
 	"context"
-	"io"
 	"os"
 
 	"github.com/hinshun/ptmux/pkg/p2p"
@@ -39,10 +38,6 @@ var hostCommand = &cli.Command{
 		if err != nil {
 			return err
 		}
-
-		go func() {
-			io.Copy(t, os.Stdin)
-		}()
 
 		ctx, cancel := context.WithCancel(ctx)
 		eg, ctx := errgroup.WithContext(ctx)

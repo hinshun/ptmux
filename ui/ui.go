@@ -2,15 +2,20 @@ package ui
 
 import (
 	"context"
+	"os"
+	"strings"
 	"unicode"
 	"unicode/utf8"
 
 	tcell "github.com/gdamore/tcell/v2"
+	"github.com/gdamore/tcell/v2/terminfo"
 	"github.com/hinshun/vt10x"
+	"github.com/rs/zerolog"
 )
 
 type UI struct {
 	view          vt10x.View
+	terminfo      *terminfo.Terminfo
 	screen        tcell.Screen
 	width, height int
 }
@@ -30,11 +35,32 @@ func New(view vt10x.View) (*UI, error) {
 	height--
 	view.Resize(width, height)
 
+	var term string
+	for _, s := range os.Environ() {
+		if strings.HasPrefix(s, "TERM=") {
+			term = s[len("TERM="):]
+			break
+		}
+	}
+
+	var ti *terminfo.Terminfo
+	if term != "" {
+		ti, err = findTerminfo(term)
+	}
+	if ti == nil {
+		// Fallback to xterm.
+		ti, err = findTerminfo("xterm")
+	}
+	if err != nil {
+		return nil, err
+	}
+
 	return &UI{
-		view:   view,
-		screen: screen,
-		width:  width,
-		height: height,
+		view:     view,
+		terminfo: ti,
+		screen:   screen,
+		width:    width,
+		height:   height,
 	}, nil
 }
 
@@ -66,6 +92,19 @@ func (u *UI) Loop(ctx context.Context) error {
 				u.height--
 				u.view.Resize(u.width, u.height)
 				u.screen.Sync()
+			default:
+				t, ok := u.view.(vt10x.Terminal)
+				if !ok {
+					continue
+				}
+
+				seq, parsed := eventToBytes(u.view, event, MouseState{}, u.terminfo)
+				if parsed {
+					_, err := t.Write(seq)
+					if err != nil {
+						zerolog.Ctx(ctx).Error().Err(err).Msg("unable to send all input to terminal")
+					}
+				}
 			}
 		}
 	}
