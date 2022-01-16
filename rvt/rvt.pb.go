@@ -33,9 +33,8 @@ type ShareMessage struct {
 	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
 	// Types that are valid to be assigned to Event:
 	//	*ShareMessage_Init
-	//	*ShareMessage_Fd
-	//	*ShareMessage_Resize
 	//	*ShareMessage_State
+	//	*ShareMessage_Tcell
 	Event isShareMessage_Event `protobuf_oneof:"Event"`
 }
 
@@ -81,20 +80,16 @@ type isShareMessage_Event interface {
 type ShareMessage_Init struct {
 	Init *InitMessage `protobuf:"bytes,2,opt,name=Init,proto3,oneof" json:"Init,omitempty"`
 }
-type ShareMessage_Fd struct {
-	Fd *FdMessage `protobuf:"bytes,3,opt,name=Fd,proto3,oneof" json:"Fd,omitempty"`
-}
-type ShareMessage_Resize struct {
-	Resize *ResizeMessage `protobuf:"bytes,4,opt,name=Resize,proto3,oneof" json:"Resize,omitempty"`
-}
 type ShareMessage_State struct {
-	State *StateMessage `protobuf:"bytes,5,opt,name=State,proto3,oneof" json:"State,omitempty"`
+	State *StateMessage `protobuf:"bytes,3,opt,name=State,proto3,oneof" json:"State,omitempty"`
+}
+type ShareMessage_Tcell struct {
+	Tcell *TcellMessage `protobuf:"bytes,4,opt,name=Tcell,proto3,oneof" json:"Tcell,omitempty"`
 }
 
-func (*ShareMessage_Init) isShareMessage_Event()   {}
-func (*ShareMessage_Fd) isShareMessage_Event()     {}
-func (*ShareMessage_Resize) isShareMessage_Event() {}
-func (*ShareMessage_State) isShareMessage_Event()  {}
+func (*ShareMessage_Init) isShareMessage_Event()  {}
+func (*ShareMessage_State) isShareMessage_Event() {}
+func (*ShareMessage_Tcell) isShareMessage_Event() {}
 
 func (m *ShareMessage) GetEvent() isShareMessage_Event {
 	if m != nil {
@@ -117,23 +112,16 @@ func (m *ShareMessage) GetInit() *InitMessage {
 	return nil
 }
 
-func (m *ShareMessage) GetFd() *FdMessage {
-	if x, ok := m.GetEvent().(*ShareMessage_Fd); ok {
-		return x.Fd
-	}
-	return nil
-}
-
-func (m *ShareMessage) GetResize() *ResizeMessage {
-	if x, ok := m.GetEvent().(*ShareMessage_Resize); ok {
-		return x.Resize
-	}
-	return nil
-}
-
 func (m *ShareMessage) GetState() *StateMessage {
 	if x, ok := m.GetEvent().(*ShareMessage_State); ok {
 		return x.State
+	}
+	return nil
+}
+
+func (m *ShareMessage) GetTcell() *TcellMessage {
+	if x, ok := m.GetEvent().(*ShareMessage_Tcell); ok {
+		return x.Tcell
 	}
 	return nil
 }
@@ -142,9 +130,8 @@ func (m *ShareMessage) GetState() *StateMessage {
 func (*ShareMessage) XXX_OneofWrappers() []interface{} {
 	return []interface{}{
 		(*ShareMessage_Init)(nil),
-		(*ShareMessage_Fd)(nil),
-		(*ShareMessage_Resize)(nil),
 		(*ShareMessage_State)(nil),
+		(*ShareMessage_Tcell)(nil),
 	}
 }
 
@@ -242,57 +229,6 @@ func (m *FdMessage) GetData() []byte {
 	return nil
 }
 
-type ResizeMessage struct {
-	Cols uint32 `protobuf:"varint,1,opt,name=cols,proto3" json:"cols,omitempty"`
-	Rows uint32 `protobuf:"varint,2,opt,name=rows,proto3" json:"rows,omitempty"`
-}
-
-func (m *ResizeMessage) Reset()      { *m = ResizeMessage{} }
-func (*ResizeMessage) ProtoMessage() {}
-func (*ResizeMessage) Descriptor() ([]byte, []int) {
-	return fileDescriptor_ce9e79630956d2f5, []int{3}
-}
-func (m *ResizeMessage) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *ResizeMessage) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_ResizeMessage.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *ResizeMessage) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_ResizeMessage.Merge(m, src)
-}
-func (m *ResizeMessage) XXX_Size() int {
-	return m.Size()
-}
-func (m *ResizeMessage) XXX_DiscardUnknown() {
-	xxx_messageInfo_ResizeMessage.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_ResizeMessage proto.InternalMessageInfo
-
-func (m *ResizeMessage) GetCols() uint32 {
-	if m != nil {
-		return m.Cols
-	}
-	return 0
-}
-
-func (m *ResizeMessage) GetRows() uint32 {
-	if m != nil {
-		return m.Rows
-	}
-	return 0
-}
-
 type StateMessage struct {
 	Cols   int64   `protobuf:"varint,1,opt,name=cols,proto3" json:"cols,omitempty"`
 	Rows   int64   `protobuf:"varint,2,opt,name=rows,proto3" json:"rows,omitempty"`
@@ -305,7 +241,7 @@ type StateMessage struct {
 func (m *StateMessage) Reset()      { *m = StateMessage{} }
 func (*StateMessage) ProtoMessage() {}
 func (*StateMessage) Descriptor() ([]byte, []int) {
-	return fileDescriptor_ce9e79630956d2f5, []int{4}
+	return fileDescriptor_ce9e79630956d2f5, []int{3}
 }
 func (m *StateMessage) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -383,7 +319,7 @@ type Line struct {
 func (m *Line) Reset()      { *m = Line{} }
 func (*Line) ProtoMessage() {}
 func (*Line) Descriptor() ([]byte, []int) {
-	return fileDescriptor_ce9e79630956d2f5, []int{5}
+	return fileDescriptor_ce9e79630956d2f5, []int{4}
 }
 func (m *Line) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -429,7 +365,7 @@ type Glyph struct {
 func (m *Glyph) Reset()      { *m = Glyph{} }
 func (*Glyph) ProtoMessage() {}
 func (*Glyph) Descriptor() ([]byte, []int) {
-	return fileDescriptor_ce9e79630956d2f5, []int{6}
+	return fileDescriptor_ce9e79630956d2f5, []int{5}
 }
 func (m *Glyph) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -496,7 +432,7 @@ type Cursor struct {
 func (m *Cursor) Reset()      { *m = Cursor{} }
 func (*Cursor) ProtoMessage() {}
 func (*Cursor) Descriptor() ([]byte, []int) {
-	return fileDescriptor_ce9e79630956d2f5, []int{7}
+	return fileDescriptor_ce9e79630956d2f5, []int{6}
 }
 func (m *Cursor) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -553,55 +489,399 @@ func (m *Cursor) GetAttr() *Glyph {
 	return nil
 }
 
+type TcellMessage struct {
+	// Types that are valid to be assigned to TcellEvent:
+	//	*TcellMessage_Mouse
+	//	*TcellMessage_Key
+	//	*TcellMessage_Resize
+	//	*TcellMessage_Paste
+	TcellEvent isTcellMessage_TcellEvent `protobuf_oneof:"TcellEvent"`
+}
+
+func (m *TcellMessage) Reset()      { *m = TcellMessage{} }
+func (*TcellMessage) ProtoMessage() {}
+func (*TcellMessage) Descriptor() ([]byte, []int) {
+	return fileDescriptor_ce9e79630956d2f5, []int{7}
+}
+func (m *TcellMessage) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *TcellMessage) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_TcellMessage.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *TcellMessage) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_TcellMessage.Merge(m, src)
+}
+func (m *TcellMessage) XXX_Size() int {
+	return m.Size()
+}
+func (m *TcellMessage) XXX_DiscardUnknown() {
+	xxx_messageInfo_TcellMessage.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_TcellMessage proto.InternalMessageInfo
+
+type isTcellMessage_TcellEvent interface {
+	isTcellMessage_TcellEvent()
+	Equal(interface{}) bool
+	MarshalTo([]byte) (int, error)
+	Size() int
+}
+
+type TcellMessage_Mouse struct {
+	Mouse *EventMouse `protobuf:"bytes,1,opt,name=Mouse,proto3,oneof" json:"Mouse,omitempty"`
+}
+type TcellMessage_Key struct {
+	Key *EventKey `protobuf:"bytes,2,opt,name=Key,proto3,oneof" json:"Key,omitempty"`
+}
+type TcellMessage_Resize struct {
+	Resize *EventResize `protobuf:"bytes,3,opt,name=Resize,proto3,oneof" json:"Resize,omitempty"`
+}
+type TcellMessage_Paste struct {
+	Paste *EventPaste `protobuf:"bytes,4,opt,name=Paste,proto3,oneof" json:"Paste,omitempty"`
+}
+
+func (*TcellMessage_Mouse) isTcellMessage_TcellEvent()  {}
+func (*TcellMessage_Key) isTcellMessage_TcellEvent()    {}
+func (*TcellMessage_Resize) isTcellMessage_TcellEvent() {}
+func (*TcellMessage_Paste) isTcellMessage_TcellEvent()  {}
+
+func (m *TcellMessage) GetTcellEvent() isTcellMessage_TcellEvent {
+	if m != nil {
+		return m.TcellEvent
+	}
+	return nil
+}
+
+func (m *TcellMessage) GetMouse() *EventMouse {
+	if x, ok := m.GetTcellEvent().(*TcellMessage_Mouse); ok {
+		return x.Mouse
+	}
+	return nil
+}
+
+func (m *TcellMessage) GetKey() *EventKey {
+	if x, ok := m.GetTcellEvent().(*TcellMessage_Key); ok {
+		return x.Key
+	}
+	return nil
+}
+
+func (m *TcellMessage) GetResize() *EventResize {
+	if x, ok := m.GetTcellEvent().(*TcellMessage_Resize); ok {
+		return x.Resize
+	}
+	return nil
+}
+
+func (m *TcellMessage) GetPaste() *EventPaste {
+	if x, ok := m.GetTcellEvent().(*TcellMessage_Paste); ok {
+		return x.Paste
+	}
+	return nil
+}
+
+// XXX_OneofWrappers is for the internal use of the proto package.
+func (*TcellMessage) XXX_OneofWrappers() []interface{} {
+	return []interface{}{
+		(*TcellMessage_Mouse)(nil),
+		(*TcellMessage_Key)(nil),
+		(*TcellMessage_Resize)(nil),
+		(*TcellMessage_Paste)(nil),
+	}
+}
+
+type EventMouse struct {
+	X          int64 `protobuf:"varint,1,opt,name=x,proto3" json:"x,omitempty"`
+	Y          int64 `protobuf:"varint,2,opt,name=y,proto3" json:"y,omitempty"`
+	ButtonMask int32 `protobuf:"varint,3,opt,name=button_mask,json=buttonMask,proto3" json:"button_mask,omitempty"`
+	ModMask    int32 `protobuf:"varint,4,opt,name=mod_mask,json=modMask,proto3" json:"mod_mask,omitempty"`
+}
+
+func (m *EventMouse) Reset()      { *m = EventMouse{} }
+func (*EventMouse) ProtoMessage() {}
+func (*EventMouse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_ce9e79630956d2f5, []int{8}
+}
+func (m *EventMouse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *EventMouse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_EventMouse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *EventMouse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_EventMouse.Merge(m, src)
+}
+func (m *EventMouse) XXX_Size() int {
+	return m.Size()
+}
+func (m *EventMouse) XXX_DiscardUnknown() {
+	xxx_messageInfo_EventMouse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_EventMouse proto.InternalMessageInfo
+
+func (m *EventMouse) GetX() int64 {
+	if m != nil {
+		return m.X
+	}
+	return 0
+}
+
+func (m *EventMouse) GetY() int64 {
+	if m != nil {
+		return m.Y
+	}
+	return 0
+}
+
+func (m *EventMouse) GetButtonMask() int32 {
+	if m != nil {
+		return m.ButtonMask
+	}
+	return 0
+}
+
+func (m *EventMouse) GetModMask() int32 {
+	if m != nil {
+		return m.ModMask
+	}
+	return 0
+}
+
+type EventKey struct {
+	Key     int32 `protobuf:"varint,1,opt,name=key,proto3" json:"key,omitempty"`
+	Rune    int32 `protobuf:"varint,2,opt,name=rune,proto3" json:"rune,omitempty"`
+	ModMask int32 `protobuf:"varint,3,opt,name=mod_mask,json=modMask,proto3" json:"mod_mask,omitempty"`
+}
+
+func (m *EventKey) Reset()      { *m = EventKey{} }
+func (*EventKey) ProtoMessage() {}
+func (*EventKey) Descriptor() ([]byte, []int) {
+	return fileDescriptor_ce9e79630956d2f5, []int{9}
+}
+func (m *EventKey) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *EventKey) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_EventKey.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *EventKey) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_EventKey.Merge(m, src)
+}
+func (m *EventKey) XXX_Size() int {
+	return m.Size()
+}
+func (m *EventKey) XXX_DiscardUnknown() {
+	xxx_messageInfo_EventKey.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_EventKey proto.InternalMessageInfo
+
+func (m *EventKey) GetKey() int32 {
+	if m != nil {
+		return m.Key
+	}
+	return 0
+}
+
+func (m *EventKey) GetRune() int32 {
+	if m != nil {
+		return m.Rune
+	}
+	return 0
+}
+
+func (m *EventKey) GetModMask() int32 {
+	if m != nil {
+		return m.ModMask
+	}
+	return 0
+}
+
+type EventResize struct {
+	Width  int64 `protobuf:"varint,1,opt,name=width,proto3" json:"width,omitempty"`
+	Height int64 `protobuf:"varint,2,opt,name=height,proto3" json:"height,omitempty"`
+}
+
+func (m *EventResize) Reset()      { *m = EventResize{} }
+func (*EventResize) ProtoMessage() {}
+func (*EventResize) Descriptor() ([]byte, []int) {
+	return fileDescriptor_ce9e79630956d2f5, []int{10}
+}
+func (m *EventResize) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *EventResize) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_EventResize.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *EventResize) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_EventResize.Merge(m, src)
+}
+func (m *EventResize) XXX_Size() int {
+	return m.Size()
+}
+func (m *EventResize) XXX_DiscardUnknown() {
+	xxx_messageInfo_EventResize.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_EventResize proto.InternalMessageInfo
+
+func (m *EventResize) GetWidth() int64 {
+	if m != nil {
+		return m.Width
+	}
+	return 0
+}
+
+func (m *EventResize) GetHeight() int64 {
+	if m != nil {
+		return m.Height
+	}
+	return 0
+}
+
+type EventPaste struct {
+	Start bool `protobuf:"varint,1,opt,name=start,proto3" json:"start,omitempty"`
+}
+
+func (m *EventPaste) Reset()      { *m = EventPaste{} }
+func (*EventPaste) ProtoMessage() {}
+func (*EventPaste) Descriptor() ([]byte, []int) {
+	return fileDescriptor_ce9e79630956d2f5, []int{11}
+}
+func (m *EventPaste) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *EventPaste) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_EventPaste.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *EventPaste) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_EventPaste.Merge(m, src)
+}
+func (m *EventPaste) XXX_Size() int {
+	return m.Size()
+}
+func (m *EventPaste) XXX_DiscardUnknown() {
+	xxx_messageInfo_EventPaste.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_EventPaste proto.InternalMessageInfo
+
+func (m *EventPaste) GetStart() bool {
+	if m != nil {
+		return m.Start
+	}
+	return false
+}
+
 func init() {
 	proto.RegisterType((*ShareMessage)(nil), "ptmux.rvt.v1.ShareMessage")
 	proto.RegisterType((*InitMessage)(nil), "ptmux.rvt.v1.InitMessage")
 	proto.RegisterType((*FdMessage)(nil), "ptmux.rvt.v1.FdMessage")
-	proto.RegisterType((*ResizeMessage)(nil), "ptmux.rvt.v1.ResizeMessage")
 	proto.RegisterType((*StateMessage)(nil), "ptmux.rvt.v1.StateMessage")
 	proto.RegisterType((*Line)(nil), "ptmux.rvt.v1.Line")
 	proto.RegisterType((*Glyph)(nil), "ptmux.rvt.v1.Glyph")
 	proto.RegisterType((*Cursor)(nil), "ptmux.rvt.v1.Cursor")
+	proto.RegisterType((*TcellMessage)(nil), "ptmux.rvt.v1.TcellMessage")
+	proto.RegisterType((*EventMouse)(nil), "ptmux.rvt.v1.EventMouse")
+	proto.RegisterType((*EventKey)(nil), "ptmux.rvt.v1.EventKey")
+	proto.RegisterType((*EventResize)(nil), "ptmux.rvt.v1.EventResize")
+	proto.RegisterType((*EventPaste)(nil), "ptmux.rvt.v1.EventPaste")
 }
 
 func init() { proto.RegisterFile("rvt.proto", fileDescriptor_ce9e79630956d2f5) }
 
 var fileDescriptor_ce9e79630956d2f5 = []byte{
-	// 532 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x7c, 0x93, 0xcf, 0x6e, 0xd3, 0x4a,
-	0x14, 0xc6, 0x3d, 0x76, 0xec, 0xdb, 0x9c, 0xc4, 0x57, 0x68, 0xa8, 0x84, 0x29, 0xd2, 0x28, 0xf2,
-	0x86, 0x20, 0x50, 0x80, 0x54, 0x08, 0xb1, 0xa4, 0x15, 0x01, 0x24, 0x50, 0xa5, 0x29, 0x2b, 0x76,
-	0x4e, 0x3c, 0x71, 0x2d, 0x25, 0x76, 0x64, 0x4f, 0x42, 0xc2, 0x8a, 0x47, 0xe0, 0x31, 0x78, 0x04,
-	0x1e, 0x81, 0x65, 0x96, 0x5d, 0x12, 0x67, 0xc3, 0x0a, 0xf5, 0x11, 0xd0, 0x9c, 0x19, 0x35, 0x31,
-	0xaa, 0xd8, 0x9d, 0x3f, 0xbf, 0x6f, 0x74, 0xbe, 0x33, 0x33, 0xd0, 0x2c, 0x16, 0xb2, 0x37, 0x2b,
-	0x72, 0x99, 0xd3, 0xf6, 0x4c, 0x4e, 0xe7, 0xcb, 0x9e, 0x2a, 0x2c, 0x9e, 0x86, 0xbf, 0x09, 0xb4,
-	0xcf, 0x2f, 0xa2, 0x42, 0xbc, 0x17, 0x65, 0x19, 0x25, 0x82, 0xfe, 0x0f, 0x76, 0x1a, 0x07, 0xa4,
-	0x43, 0xba, 0x4d, 0x6e, 0xa7, 0x31, 0x7d, 0x0c, 0x8d, 0xb7, 0x59, 0x2a, 0x03, 0xbb, 0x43, 0xba,
-	0xad, 0xfe, 0xdd, 0xde, 0xbe, 0xba, 0xa7, 0x3a, 0x46, 0xf8, 0xc6, 0xe2, 0x08, 0xd2, 0x07, 0x60,
-	0x0f, 0xe2, 0xc0, 0x41, 0xfc, 0x4e, 0x1d, 0x1f, 0xc4, 0x3b, 0xd8, 0x1e, 0xc4, 0xf4, 0x19, 0x78,
-	0x5c, 0x94, 0xe9, 0x67, 0x11, 0x34, 0x10, 0xbf, 0x57, 0xc7, 0x75, 0x6f, 0x27, 0x31, 0x30, 0xed,
-	0x83, 0x7b, 0x2e, 0x23, 0x29, 0x02, 0x17, 0x55, 0x47, 0x75, 0x15, 0xb6, 0x76, 0x22, 0x8d, 0x9e,
-	0xfc, 0x07, 0xee, 0xab, 0x85, 0xc8, 0x64, 0xe8, 0x43, 0x6b, 0x6f, 0xea, 0xf0, 0x25, 0x34, 0xaf,
-	0xa7, 0x52, 0xde, 0xc7, 0xda, 0xbb, 0xcf, 0xed, 0x71, 0x4c, 0x6f, 0x81, 0x23, 0xf2, 0x31, 0x5a,
-	0x3f, 0xe0, 0x2a, 0xa4, 0x14, 0x1a, 0x71, 0x24, 0x23, 0xb4, 0xd7, 0xe6, 0x18, 0x87, 0xcf, 0xc1,
-	0xaf, 0x4d, 0xaa, 0xa0, 0x51, 0x3e, 0x29, 0xcd, 0x41, 0x18, 0xab, 0x5a, 0x91, 0x7f, 0x2a, 0xf1,
-	0x2c, 0x9f, 0x63, 0x1c, 0x7e, 0x57, 0xbb, 0xdf, 0x9b, 0xb6, 0x26, 0x74, 0x6e, 0x10, 0x3a, 0x5a,
-	0xa8, 0x6a, 0xd3, 0x3c, 0x16, 0x38, 0x85, 0xcf, 0x31, 0xa6, 0x87, 0xe0, 0xca, 0x54, 0x4e, 0xf4,
-	0x2a, 0x9b, 0x5c, 0x27, 0xf4, 0x11, 0x78, 0xa3, 0x79, 0x51, 0xe6, 0x85, 0xd9, 0xd5, 0x61, 0x7d,
-	0x57, 0xa7, 0xd8, 0xe3, 0x86, 0xa1, 0x5d, 0x70, 0x27, 0x69, 0x26, 0xca, 0xc0, 0xeb, 0x38, 0xdd,
-	0x56, 0x9f, 0xd6, 0xe1, 0x77, 0x69, 0x26, 0xb8, 0x06, 0xc2, 0x63, 0x68, 0xa8, 0x94, 0x3e, 0x04,
-	0x2f, 0x99, 0xac, 0x66, 0x17, 0x6a, 0x66, 0x25, 0xb9, 0x5d, 0x97, 0xbc, 0x56, 0x3d, 0x6e, 0x90,
-	0xf0, 0x0c, 0x5c, 0x2c, 0xa0, 0xa7, 0x79, 0x26, 0xd0, 0xa7, 0xcb, 0x31, 0xbe, 0xf6, 0x64, 0xeb,
-	0x1a, 0x7a, 0x52, 0xf7, 0x91, 0x18, 0x97, 0xf6, 0x38, 0x51, 0xf9, 0x30, 0x41, 0x83, 0x3e, 0xb7,
-	0x87, 0x49, 0x38, 0x02, 0x4f, 0x3b, 0xa0, 0x6d, 0x20, 0x4b, 0xb3, 0x36, 0xb2, 0x54, 0xd9, 0xca,
-	0x2c, 0x8c, 0xac, 0xd4, 0x66, 0x4a, 0x7c, 0x2e, 0xfa, 0x20, 0x9d, 0xd0, 0xfb, 0xd0, 0x88, 0xa4,
-	0x2c, 0xcc, 0xcb, 0xbb, 0x71, 0x6e, 0x04, 0xfa, 0x67, 0x70, 0xf0, 0x41, 0x14, 0xd3, 0x34, 0x8b,
-	0x26, 0xf4, 0x14, 0x5c, 0xfc, 0x2c, 0xf4, 0xef, 0x37, 0xb7, 0xf7, 0x83, 0x8e, 0xfe, 0xd1, 0xeb,
-	0x92, 0x27, 0xe4, 0xe4, 0xc5, 0x7a, 0xc3, 0xac, 0xcb, 0x0d, 0xb3, 0xae, 0x36, 0x8c, 0x7c, 0xa9,
-	0x18, 0xf9, 0x56, 0x31, 0xf2, 0xa3, 0x62, 0x64, 0x5d, 0x31, 0xf2, 0xb3, 0x62, 0xe4, 0x57, 0xc5,
-	0xac, 0xab, 0x8a, 0x91, 0xaf, 0x5b, 0x66, 0xad, 0xb7, 0xcc, 0xba, 0xdc, 0x32, 0xeb, 0xa3, 0x53,
-	0x2c, 0xe4, 0xd0, 0xc3, 0x2f, 0x7c, 0xfc, 0x27, 0x00, 0x00, 0xff, 0xff, 0xae, 0x1c, 0x77, 0x65,
-	0xcf, 0x03, 0x00, 0x00,
+	// 685 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x7c, 0x54, 0x3f, 0x6f, 0xd3, 0x40,
+	0x1c, 0xf5, 0xd9, 0xb1, 0x9b, 0xfc, 0x92, 0x20, 0x74, 0x54, 0x95, 0xdb, 0xc1, 0x54, 0x5e, 0x88,
+	0x00, 0x85, 0x92, 0x4e, 0x88, 0x89, 0x56, 0x40, 0x51, 0xa9, 0x8a, 0xae, 0x9d, 0x58, 0x90, 0x13,
+	0x5f, 0x1c, 0xab, 0x8e, 0x5d, 0xd9, 0x97, 0xb4, 0x61, 0xe2, 0x23, 0xf0, 0x31, 0xf8, 0x08, 0x8c,
+	0x8c, 0x8c, 0x1d, 0x3b, 0x12, 0x77, 0x61, 0xec, 0x47, 0x40, 0xf7, 0xbb, 0x6b, 0xeb, 0xa0, 0xa8,
+	0xdb, 0xef, 0xcf, 0x7b, 0xd6, 0x7b, 0xbf, 0xbc, 0x1c, 0x34, 0xf2, 0xa9, 0xe8, 0x9e, 0xe6, 0x99,
+	0xc8, 0x68, 0xeb, 0x54, 0x8c, 0x27, 0xe7, 0x5d, 0x39, 0x98, 0xbe, 0xf4, 0x7f, 0x11, 0x68, 0x1d,
+	0x8d, 0x82, 0x9c, 0x1f, 0xf0, 0xa2, 0x08, 0x22, 0x4e, 0x1f, 0x80, 0x19, 0x87, 0x2e, 0xd9, 0x24,
+	0x9d, 0x06, 0x33, 0xe3, 0x90, 0xbe, 0x80, 0xda, 0x87, 0x34, 0x16, 0xae, 0xb9, 0x49, 0x3a, 0xcd,
+	0xde, 0x7a, 0xb7, 0xca, 0xee, 0xca, 0x8d, 0x26, 0xee, 0x19, 0x0c, 0x81, 0xb4, 0x07, 0xf6, 0x91,
+	0x08, 0x04, 0x77, 0x2d, 0x64, 0x6c, 0x2c, 0x32, 0x70, 0x75, 0x47, 0x51, 0x50, 0xc9, 0x39, 0x1e,
+	0xf0, 0x24, 0x71, 0x6b, 0xcb, 0x38, 0xb8, 0xaa, 0x70, 0xb0, 0xdf, 0x59, 0x01, 0xfb, 0xed, 0x94,
+	0xa7, 0xc2, 0x6f, 0x43, 0xb3, 0xa2, 0xc3, 0x7f, 0x03, 0x8d, 0x77, 0x61, 0xc5, 0xcd, 0x50, 0xb9,
+	0x69, 0x33, 0x73, 0x18, 0xd2, 0x87, 0x60, 0xf1, 0x6c, 0x88, 0x66, 0xea, 0x4c, 0x96, 0x94, 0x42,
+	0x2d, 0x0c, 0x44, 0x80, 0x6a, 0x5b, 0x0c, 0x6b, 0xff, 0xa7, 0x3c, 0x4a, 0x45, 0xa8, 0x04, 0x0d,
+	0xb2, 0xa4, 0xc0, 0x0f, 0x59, 0x0c, 0x6b, 0x39, 0xcb, 0xb3, 0xb3, 0x02, 0xbf, 0x65, 0x31, 0xac,
+	0xe5, 0x6c, 0x9c, 0x85, 0xca, 0x7a, 0x9b, 0x61, 0x4d, 0x57, 0xc1, 0x16, 0xb1, 0x48, 0x38, 0x7a,
+	0x6b, 0x30, 0xd5, 0xd0, 0xe7, 0xe0, 0x0c, 0x26, 0x79, 0x91, 0xe5, 0xae, 0x8d, 0x96, 0x57, 0x17,
+	0x2d, 0xef, 0xe2, 0x8e, 0x69, 0x0c, 0xed, 0x80, 0x9d, 0xc4, 0x29, 0x2f, 0x5c, 0x67, 0xd3, 0xea,
+	0x34, 0x7b, 0x74, 0x11, 0xfc, 0x31, 0x4e, 0x39, 0x53, 0x00, 0x7f, 0x1b, 0x6a, 0xb2, 0xa5, 0xcf,
+	0xc0, 0x89, 0x92, 0xd9, 0xe9, 0x48, 0x6a, 0x96, 0x94, 0x47, 0x8b, 0x94, 0xf7, 0x72, 0xc7, 0x34,
+	0xc4, 0x3f, 0x04, 0x1b, 0x07, 0xe8, 0x69, 0x92, 0x72, 0xf4, 0x69, 0x33, 0xac, 0x6f, 0x3d, 0x99,
+	0x6a, 0x86, 0x9e, 0xe4, 0x59, 0x23, 0xed, 0xd2, 0x1c, 0x46, 0xb2, 0xef, 0x47, 0x68, 0xb0, 0xcd,
+	0xcc, 0x7e, 0xe4, 0x0f, 0xc0, 0x51, 0x0e, 0x68, 0x0b, 0xc8, 0xb9, 0x3e, 0x1b, 0x39, 0x97, 0xdd,
+	0x4c, 0x1f, 0x8c, 0xcc, 0xe4, 0x65, 0x8a, 0xdb, 0xa4, 0xb4, 0x99, 0x6a, 0xe8, 0x13, 0xa8, 0x05,
+	0x42, 0xe4, 0x3a, 0x0a, 0x4b, 0x75, 0x23, 0xc0, 0x9f, 0x13, 0x68, 0x55, 0xa3, 0x41, 0xb7, 0xc0,
+	0x3e, 0xc8, 0x26, 0x85, 0x92, 0xdf, 0xec, 0xb9, 0x8b, 0x54, 0x0c, 0x0b, 0xee, 0x65, 0x86, 0xb0,
+	0xa0, 0x4f, 0xc1, 0xda, 0xe7, 0x33, 0x9d, 0xed, 0xb5, 0x25, 0xf8, 0x7d, 0x3e, 0xdb, 0x33, 0x98,
+	0x04, 0xd1, 0x6d, 0x70, 0x18, 0x2f, 0xe2, 0xaf, 0x37, 0xc1, 0x5e, 0x5f, 0x02, 0x57, 0x80, 0x3d,
+	0x83, 0x69, 0xa8, 0x94, 0xf4, 0x29, 0x28, 0x04, 0xd7, 0x6e, 0x96, 0x49, 0xc2, 0xbd, 0x94, 0x84,
+	0xc5, 0x4e, 0x0b, 0x00, 0x4d, 0xa9, 0x6c, 0x87, 0x00, 0x77, 0xba, 0xef, 0x3d, 0xe6, 0x63, 0x68,
+	0xf6, 0x27, 0x42, 0x64, 0xe9, 0x97, 0x71, 0x50, 0x9c, 0xa0, 0x46, 0x9b, 0x81, 0x1a, 0x1d, 0x04,
+	0xc5, 0x09, 0x5d, 0x87, 0xfa, 0x38, 0x0b, 0xd5, 0xb6, 0x86, 0xdb, 0x95, 0x71, 0x16, 0xca, 0x95,
+	0xbf, 0x0f, 0xf5, 0x1b, 0xb7, 0xf2, 0x1f, 0x72, 0xc2, 0x67, 0x3a, 0x01, 0xb2, 0xbc, 0x0d, 0x85,
+	0x59, 0x09, 0x45, 0xf5, 0x63, 0xd6, 0xe2, 0xc7, 0x5e, 0x43, 0xb3, 0x72, 0x0b, 0xf9, 0x23, 0x9f,
+	0xc5, 0xa1, 0x18, 0x69, 0xdd, 0xaa, 0xa1, 0x6b, 0xe0, 0x8c, 0x78, 0x1c, 0x8d, 0x84, 0x36, 0xa0,
+	0x3b, 0xdf, 0xd7, 0x7e, 0xf1, 0x16, 0x3a, 0x20, 0xb9, 0x40, 0x6e, 0x9d, 0xa9, 0xa6, 0x77, 0x08,
+	0xf5, 0x63, 0x9e, 0x8f, 0xe3, 0x34, 0x48, 0xe8, 0x2e, 0xd8, 0xf8, 0x7a, 0xd1, 0xff, 0x9f, 0x99,
+	0xca, 0x93, 0xb6, 0x71, 0xcf, 0xae, 0x43, 0xb6, 0xc8, 0xce, 0xab, 0x8b, 0xb9, 0x67, 0x5c, 0xce,
+	0x3d, 0xe3, 0x7a, 0xee, 0x91, 0x6f, 0xa5, 0x47, 0x7e, 0x94, 0x1e, 0xf9, 0x5d, 0x7a, 0xe4, 0xa2,
+	0xf4, 0xc8, 0x9f, 0xd2, 0x23, 0x7f, 0x4b, 0xcf, 0xb8, 0x2e, 0x3d, 0xf2, 0xfd, 0xca, 0x33, 0x2e,
+	0xae, 0x3c, 0xe3, 0xf2, 0xca, 0x33, 0x3e, 0x5b, 0xf9, 0x54, 0xf4, 0x1d, 0x7c, 0x53, 0xb7, 0xff,
+	0x05, 0x00, 0x00, 0xff, 0xff, 0x78, 0x76, 0x6e, 0x21, 0x60, 0x05, 0x00, 0x00,
 }
 
 func (this *ShareMessage) Equal(that interface{}) bool {
@@ -661,54 +941,6 @@ func (this *ShareMessage_Init) Equal(that interface{}) bool {
 	}
 	return true
 }
-func (this *ShareMessage_Fd) Equal(that interface{}) bool {
-	if that == nil {
-		return this == nil
-	}
-
-	that1, ok := that.(*ShareMessage_Fd)
-	if !ok {
-		that2, ok := that.(ShareMessage_Fd)
-		if ok {
-			that1 = &that2
-		} else {
-			return false
-		}
-	}
-	if that1 == nil {
-		return this == nil
-	} else if this == nil {
-		return false
-	}
-	if !this.Fd.Equal(that1.Fd) {
-		return false
-	}
-	return true
-}
-func (this *ShareMessage_Resize) Equal(that interface{}) bool {
-	if that == nil {
-		return this == nil
-	}
-
-	that1, ok := that.(*ShareMessage_Resize)
-	if !ok {
-		that2, ok := that.(ShareMessage_Resize)
-		if ok {
-			that1 = &that2
-		} else {
-			return false
-		}
-	}
-	if that1 == nil {
-		return this == nil
-	} else if this == nil {
-		return false
-	}
-	if !this.Resize.Equal(that1.Resize) {
-		return false
-	}
-	return true
-}
 func (this *ShareMessage_State) Equal(that interface{}) bool {
 	if that == nil {
 		return this == nil
@@ -729,6 +961,30 @@ func (this *ShareMessage_State) Equal(that interface{}) bool {
 		return false
 	}
 	if !this.State.Equal(that1.State) {
+		return false
+	}
+	return true
+}
+func (this *ShareMessage_Tcell) Equal(that interface{}) bool {
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*ShareMessage_Tcell)
+	if !ok {
+		that2, ok := that.(ShareMessage_Tcell)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+	if !this.Tcell.Equal(that1.Tcell) {
 		return false
 	}
 	return true
@@ -780,33 +1036,6 @@ func (this *FdMessage) Equal(that interface{}) bool {
 		return false
 	}
 	if !bytes.Equal(this.Data, that1.Data) {
-		return false
-	}
-	return true
-}
-func (this *ResizeMessage) Equal(that interface{}) bool {
-	if that == nil {
-		return this == nil
-	}
-
-	that1, ok := that.(*ResizeMessage)
-	if !ok {
-		that2, ok := that.(ResizeMessage)
-		if ok {
-			that1 = &that2
-		} else {
-			return false
-		}
-	}
-	if that1 == nil {
-		return this == nil
-	} else if this == nil {
-		return false
-	}
-	if this.Cols != that1.Cols {
-		return false
-	}
-	if this.Rows != that1.Rows {
 		return false
 	}
 	return true
@@ -950,11 +1179,251 @@ func (this *Cursor) Equal(that interface{}) bool {
 	}
 	return true
 }
+func (this *TcellMessage) Equal(that interface{}) bool {
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*TcellMessage)
+	if !ok {
+		that2, ok := that.(TcellMessage)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+	if that1.TcellEvent == nil {
+		if this.TcellEvent != nil {
+			return false
+		}
+	} else if this.TcellEvent == nil {
+		return false
+	} else if !this.TcellEvent.Equal(that1.TcellEvent) {
+		return false
+	}
+	return true
+}
+func (this *TcellMessage_Mouse) Equal(that interface{}) bool {
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*TcellMessage_Mouse)
+	if !ok {
+		that2, ok := that.(TcellMessage_Mouse)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+	if !this.Mouse.Equal(that1.Mouse) {
+		return false
+	}
+	return true
+}
+func (this *TcellMessage_Key) Equal(that interface{}) bool {
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*TcellMessage_Key)
+	if !ok {
+		that2, ok := that.(TcellMessage_Key)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+	if !this.Key.Equal(that1.Key) {
+		return false
+	}
+	return true
+}
+func (this *TcellMessage_Resize) Equal(that interface{}) bool {
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*TcellMessage_Resize)
+	if !ok {
+		that2, ok := that.(TcellMessage_Resize)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+	if !this.Resize.Equal(that1.Resize) {
+		return false
+	}
+	return true
+}
+func (this *TcellMessage_Paste) Equal(that interface{}) bool {
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*TcellMessage_Paste)
+	if !ok {
+		that2, ok := that.(TcellMessage_Paste)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+	if !this.Paste.Equal(that1.Paste) {
+		return false
+	}
+	return true
+}
+func (this *EventMouse) Equal(that interface{}) bool {
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*EventMouse)
+	if !ok {
+		that2, ok := that.(EventMouse)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+	if this.X != that1.X {
+		return false
+	}
+	if this.Y != that1.Y {
+		return false
+	}
+	if this.ButtonMask != that1.ButtonMask {
+		return false
+	}
+	if this.ModMask != that1.ModMask {
+		return false
+	}
+	return true
+}
+func (this *EventKey) Equal(that interface{}) bool {
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*EventKey)
+	if !ok {
+		that2, ok := that.(EventKey)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+	if this.Key != that1.Key {
+		return false
+	}
+	if this.Rune != that1.Rune {
+		return false
+	}
+	if this.ModMask != that1.ModMask {
+		return false
+	}
+	return true
+}
+func (this *EventResize) Equal(that interface{}) bool {
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*EventResize)
+	if !ok {
+		that2, ok := that.(EventResize)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+	if this.Width != that1.Width {
+		return false
+	}
+	if this.Height != that1.Height {
+		return false
+	}
+	return true
+}
+func (this *EventPaste) Equal(that interface{}) bool {
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*EventPaste)
+	if !ok {
+		that2, ok := that.(EventPaste)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+	if this.Start != that1.Start {
+		return false
+	}
+	return true
+}
 func (this *ShareMessage) GoString() string {
 	if this == nil {
 		return "nil"
 	}
-	s := make([]string, 0, 9)
+	s := make([]string, 0, 8)
 	s = append(s, "&rvt.ShareMessage{")
 	s = append(s, "Id: "+fmt.Sprintf("%#v", this.Id)+",\n")
 	if this.Event != nil {
@@ -971,28 +1440,20 @@ func (this *ShareMessage_Init) GoString() string {
 		`Init:` + fmt.Sprintf("%#v", this.Init) + `}`}, ", ")
 	return s
 }
-func (this *ShareMessage_Fd) GoString() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&rvt.ShareMessage_Fd{` +
-		`Fd:` + fmt.Sprintf("%#v", this.Fd) + `}`}, ", ")
-	return s
-}
-func (this *ShareMessage_Resize) GoString() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&rvt.ShareMessage_Resize{` +
-		`Resize:` + fmt.Sprintf("%#v", this.Resize) + `}`}, ", ")
-	return s
-}
 func (this *ShareMessage_State) GoString() string {
 	if this == nil {
 		return "nil"
 	}
 	s := strings.Join([]string{`&rvt.ShareMessage_State{` +
 		`State:` + fmt.Sprintf("%#v", this.State) + `}`}, ", ")
+	return s
+}
+func (this *ShareMessage_Tcell) GoString() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&rvt.ShareMessage_Tcell{` +
+		`Tcell:` + fmt.Sprintf("%#v", this.Tcell) + `}`}, ", ")
 	return s
 }
 func (this *InitMessage) GoString() string {
@@ -1013,17 +1474,6 @@ func (this *FdMessage) GoString() string {
 	s = append(s, "Fd: "+fmt.Sprintf("%#v", this.Fd)+",\n")
 	s = append(s, "Eof: "+fmt.Sprintf("%#v", this.Eof)+",\n")
 	s = append(s, "Data: "+fmt.Sprintf("%#v", this.Data)+",\n")
-	s = append(s, "}")
-	return strings.Join(s, "")
-}
-func (this *ResizeMessage) GoString() string {
-	if this == nil {
-		return "nil"
-	}
-	s := make([]string, 0, 6)
-	s = append(s, "&rvt.ResizeMessage{")
-	s = append(s, "Cols: "+fmt.Sprintf("%#v", this.Cols)+",\n")
-	s = append(s, "Rows: "+fmt.Sprintf("%#v", this.Rows)+",\n")
 	s = append(s, "}")
 	return strings.Join(s, "")
 }
@@ -1083,6 +1533,96 @@ func (this *Cursor) GoString() string {
 	if this.Attr != nil {
 		s = append(s, "Attr: "+fmt.Sprintf("%#v", this.Attr)+",\n")
 	}
+	s = append(s, "}")
+	return strings.Join(s, "")
+}
+func (this *TcellMessage) GoString() string {
+	if this == nil {
+		return "nil"
+	}
+	s := make([]string, 0, 8)
+	s = append(s, "&rvt.TcellMessage{")
+	if this.TcellEvent != nil {
+		s = append(s, "TcellEvent: "+fmt.Sprintf("%#v", this.TcellEvent)+",\n")
+	}
+	s = append(s, "}")
+	return strings.Join(s, "")
+}
+func (this *TcellMessage_Mouse) GoString() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&rvt.TcellMessage_Mouse{` +
+		`Mouse:` + fmt.Sprintf("%#v", this.Mouse) + `}`}, ", ")
+	return s
+}
+func (this *TcellMessage_Key) GoString() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&rvt.TcellMessage_Key{` +
+		`Key:` + fmt.Sprintf("%#v", this.Key) + `}`}, ", ")
+	return s
+}
+func (this *TcellMessage_Resize) GoString() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&rvt.TcellMessage_Resize{` +
+		`Resize:` + fmt.Sprintf("%#v", this.Resize) + `}`}, ", ")
+	return s
+}
+func (this *TcellMessage_Paste) GoString() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&rvt.TcellMessage_Paste{` +
+		`Paste:` + fmt.Sprintf("%#v", this.Paste) + `}`}, ", ")
+	return s
+}
+func (this *EventMouse) GoString() string {
+	if this == nil {
+		return "nil"
+	}
+	s := make([]string, 0, 8)
+	s = append(s, "&rvt.EventMouse{")
+	s = append(s, "X: "+fmt.Sprintf("%#v", this.X)+",\n")
+	s = append(s, "Y: "+fmt.Sprintf("%#v", this.Y)+",\n")
+	s = append(s, "ButtonMask: "+fmt.Sprintf("%#v", this.ButtonMask)+",\n")
+	s = append(s, "ModMask: "+fmt.Sprintf("%#v", this.ModMask)+",\n")
+	s = append(s, "}")
+	return strings.Join(s, "")
+}
+func (this *EventKey) GoString() string {
+	if this == nil {
+		return "nil"
+	}
+	s := make([]string, 0, 7)
+	s = append(s, "&rvt.EventKey{")
+	s = append(s, "Key: "+fmt.Sprintf("%#v", this.Key)+",\n")
+	s = append(s, "Rune: "+fmt.Sprintf("%#v", this.Rune)+",\n")
+	s = append(s, "ModMask: "+fmt.Sprintf("%#v", this.ModMask)+",\n")
+	s = append(s, "}")
+	return strings.Join(s, "")
+}
+func (this *EventResize) GoString() string {
+	if this == nil {
+		return "nil"
+	}
+	s := make([]string, 0, 6)
+	s = append(s, "&rvt.EventResize{")
+	s = append(s, "Width: "+fmt.Sprintf("%#v", this.Width)+",\n")
+	s = append(s, "Height: "+fmt.Sprintf("%#v", this.Height)+",\n")
+	s = append(s, "}")
+	return strings.Join(s, "")
+}
+func (this *EventPaste) GoString() string {
+	if this == nil {
+		return "nil"
+	}
+	s := make([]string, 0, 5)
+	s = append(s, "&rvt.EventPaste{")
+	s = append(s, "Start: "+fmt.Sprintf("%#v", this.Start)+",\n")
 	s = append(s, "}")
 	return strings.Join(s, "")
 }
@@ -1267,48 +1807,6 @@ func (m *ShareMessage_Init) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	}
 	return len(dAtA) - i, nil
 }
-func (m *ShareMessage_Fd) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *ShareMessage_Fd) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	if m.Fd != nil {
-		{
-			size, err := m.Fd.MarshalToSizedBuffer(dAtA[:i])
-			if err != nil {
-				return 0, err
-			}
-			i -= size
-			i = encodeVarintRvt(dAtA, i, uint64(size))
-		}
-		i--
-		dAtA[i] = 0x1a
-	}
-	return len(dAtA) - i, nil
-}
-func (m *ShareMessage_Resize) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *ShareMessage_Resize) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	if m.Resize != nil {
-		{
-			size, err := m.Resize.MarshalToSizedBuffer(dAtA[:i])
-			if err != nil {
-				return 0, err
-			}
-			i -= size
-			i = encodeVarintRvt(dAtA, i, uint64(size))
-		}
-		i--
-		dAtA[i] = 0x22
-	}
-	return len(dAtA) - i, nil
-}
 func (m *ShareMessage_State) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
@@ -1326,7 +1824,28 @@ func (m *ShareMessage_State) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 			i = encodeVarintRvt(dAtA, i, uint64(size))
 		}
 		i--
-		dAtA[i] = 0x2a
+		dAtA[i] = 0x1a
+	}
+	return len(dAtA) - i, nil
+}
+func (m *ShareMessage_Tcell) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *ShareMessage_Tcell) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	if m.Tcell != nil {
+		{
+			size, err := m.Tcell.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintRvt(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x22
 	}
 	return len(dAtA) - i, nil
 }
@@ -1392,39 +1911,6 @@ func (m *FdMessage) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	}
 	if m.Fd != 0 {
 		i = encodeVarintRvt(dAtA, i, uint64(m.Fd))
-		i--
-		dAtA[i] = 0x8
-	}
-	return len(dAtA) - i, nil
-}
-
-func (m *ResizeMessage) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *ResizeMessage) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *ResizeMessage) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if m.Rows != 0 {
-		i = encodeVarintRvt(dAtA, i, uint64(m.Rows))
-		i--
-		dAtA[i] = 0x10
-	}
-	if m.Cols != 0 {
-		i = encodeVarintRvt(dAtA, i, uint64(m.Cols))
 		i--
 		dAtA[i] = 0x8
 	}
@@ -1632,6 +2118,269 @@ func (m *Cursor) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
+func (m *TcellMessage) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *TcellMessage) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *TcellMessage) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.TcellEvent != nil {
+		{
+			size := m.TcellEvent.Size()
+			i -= size
+			if _, err := m.TcellEvent.MarshalTo(dAtA[i:]); err != nil {
+				return 0, err
+			}
+		}
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *TcellMessage_Mouse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *TcellMessage_Mouse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	if m.Mouse != nil {
+		{
+			size, err := m.Mouse.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintRvt(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+func (m *TcellMessage_Key) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *TcellMessage_Key) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	if m.Key != nil {
+		{
+			size, err := m.Key.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintRvt(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x12
+	}
+	return len(dAtA) - i, nil
+}
+func (m *TcellMessage_Resize) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *TcellMessage_Resize) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	if m.Resize != nil {
+		{
+			size, err := m.Resize.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintRvt(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x1a
+	}
+	return len(dAtA) - i, nil
+}
+func (m *TcellMessage_Paste) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *TcellMessage_Paste) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	if m.Paste != nil {
+		{
+			size, err := m.Paste.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintRvt(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x22
+	}
+	return len(dAtA) - i, nil
+}
+func (m *EventMouse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *EventMouse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *EventMouse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.ModMask != 0 {
+		i = encodeVarintRvt(dAtA, i, uint64(m.ModMask))
+		i--
+		dAtA[i] = 0x20
+	}
+	if m.ButtonMask != 0 {
+		i = encodeVarintRvt(dAtA, i, uint64(m.ButtonMask))
+		i--
+		dAtA[i] = 0x18
+	}
+	if m.Y != 0 {
+		i = encodeVarintRvt(dAtA, i, uint64(m.Y))
+		i--
+		dAtA[i] = 0x10
+	}
+	if m.X != 0 {
+		i = encodeVarintRvt(dAtA, i, uint64(m.X))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *EventKey) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *EventKey) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *EventKey) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.ModMask != 0 {
+		i = encodeVarintRvt(dAtA, i, uint64(m.ModMask))
+		i--
+		dAtA[i] = 0x18
+	}
+	if m.Rune != 0 {
+		i = encodeVarintRvt(dAtA, i, uint64(m.Rune))
+		i--
+		dAtA[i] = 0x10
+	}
+	if m.Key != 0 {
+		i = encodeVarintRvt(dAtA, i, uint64(m.Key))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *EventResize) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *EventResize) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *EventResize) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Height != 0 {
+		i = encodeVarintRvt(dAtA, i, uint64(m.Height))
+		i--
+		dAtA[i] = 0x10
+	}
+	if m.Width != 0 {
+		i = encodeVarintRvt(dAtA, i, uint64(m.Width))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *EventPaste) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *EventPaste) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *EventPaste) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Start {
+		i--
+		if m.Start {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintRvt(dAtA []byte, offset int, v uint64) int {
 	offset -= sovRvt(v)
 	base := offset
@@ -1671,30 +2420,6 @@ func (m *ShareMessage_Init) Size() (n int) {
 	}
 	return n
 }
-func (m *ShareMessage_Fd) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	if m.Fd != nil {
-		l = m.Fd.Size()
-		n += 1 + l + sovRvt(uint64(l))
-	}
-	return n
-}
-func (m *ShareMessage_Resize) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	if m.Resize != nil {
-		l = m.Resize.Size()
-		n += 1 + l + sovRvt(uint64(l))
-	}
-	return n
-}
 func (m *ShareMessage_State) Size() (n int) {
 	if m == nil {
 		return 0
@@ -1703,6 +2428,18 @@ func (m *ShareMessage_State) Size() (n int) {
 	_ = l
 	if m.State != nil {
 		l = m.State.Size()
+		n += 1 + l + sovRvt(uint64(l))
+	}
+	return n
+}
+func (m *ShareMessage_Tcell) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Tcell != nil {
+		l = m.Tcell.Size()
 		n += 1 + l + sovRvt(uint64(l))
 	}
 	return n
@@ -1731,21 +2468,6 @@ func (m *FdMessage) Size() (n int) {
 	l = len(m.Data)
 	if l > 0 {
 		n += 1 + l + sovRvt(uint64(l))
-	}
-	return n
-}
-
-func (m *ResizeMessage) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	if m.Cols != 0 {
-		n += 1 + sovRvt(uint64(m.Cols))
-	}
-	if m.Rows != 0 {
-		n += 1 + sovRvt(uint64(m.Rows))
 	}
 	return n
 }
@@ -1840,6 +2562,132 @@ func (m *Cursor) Size() (n int) {
 	return n
 }
 
+func (m *TcellMessage) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.TcellEvent != nil {
+		n += m.TcellEvent.Size()
+	}
+	return n
+}
+
+func (m *TcellMessage_Mouse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Mouse != nil {
+		l = m.Mouse.Size()
+		n += 1 + l + sovRvt(uint64(l))
+	}
+	return n
+}
+func (m *TcellMessage_Key) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Key != nil {
+		l = m.Key.Size()
+		n += 1 + l + sovRvt(uint64(l))
+	}
+	return n
+}
+func (m *TcellMessage_Resize) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Resize != nil {
+		l = m.Resize.Size()
+		n += 1 + l + sovRvt(uint64(l))
+	}
+	return n
+}
+func (m *TcellMessage_Paste) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Paste != nil {
+		l = m.Paste.Size()
+		n += 1 + l + sovRvt(uint64(l))
+	}
+	return n
+}
+func (m *EventMouse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.X != 0 {
+		n += 1 + sovRvt(uint64(m.X))
+	}
+	if m.Y != 0 {
+		n += 1 + sovRvt(uint64(m.Y))
+	}
+	if m.ButtonMask != 0 {
+		n += 1 + sovRvt(uint64(m.ButtonMask))
+	}
+	if m.ModMask != 0 {
+		n += 1 + sovRvt(uint64(m.ModMask))
+	}
+	return n
+}
+
+func (m *EventKey) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Key != 0 {
+		n += 1 + sovRvt(uint64(m.Key))
+	}
+	if m.Rune != 0 {
+		n += 1 + sovRvt(uint64(m.Rune))
+	}
+	if m.ModMask != 0 {
+		n += 1 + sovRvt(uint64(m.ModMask))
+	}
+	return n
+}
+
+func (m *EventResize) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Width != 0 {
+		n += 1 + sovRvt(uint64(m.Width))
+	}
+	if m.Height != 0 {
+		n += 1 + sovRvt(uint64(m.Height))
+	}
+	return n
+}
+
+func (m *EventPaste) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Start {
+		n += 2
+	}
+	return n
+}
+
 func sovRvt(x uint64) (n int) {
 	return (math_bits.Len64(x|1) + 6) / 7
 }
@@ -1867,32 +2715,22 @@ func (this *ShareMessage_Init) String() string {
 	}, "")
 	return s
 }
-func (this *ShareMessage_Fd) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&ShareMessage_Fd{`,
-		`Fd:` + strings.Replace(fmt.Sprintf("%v", this.Fd), "FdMessage", "FdMessage", 1) + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *ShareMessage_Resize) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&ShareMessage_Resize{`,
-		`Resize:` + strings.Replace(fmt.Sprintf("%v", this.Resize), "ResizeMessage", "ResizeMessage", 1) + `,`,
-		`}`,
-	}, "")
-	return s
-}
 func (this *ShareMessage_State) String() string {
 	if this == nil {
 		return "nil"
 	}
 	s := strings.Join([]string{`&ShareMessage_State{`,
 		`State:` + strings.Replace(fmt.Sprintf("%v", this.State), "StateMessage", "StateMessage", 1) + `,`,
+		`}`,
+	}, "")
+	return s
+}
+func (this *ShareMessage_Tcell) String() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&ShareMessage_Tcell{`,
+		`Tcell:` + strings.Replace(fmt.Sprintf("%v", this.Tcell), "TcellMessage", "TcellMessage", 1) + `,`,
 		`}`,
 	}, "")
 	return s
@@ -1914,17 +2752,6 @@ func (this *FdMessage) String() string {
 		`Fd:` + fmt.Sprintf("%v", this.Fd) + `,`,
 		`Eof:` + fmt.Sprintf("%v", this.Eof) + `,`,
 		`Data:` + fmt.Sprintf("%v", this.Data) + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *ResizeMessage) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&ResizeMessage{`,
-		`Cols:` + fmt.Sprintf("%v", this.Cols) + `,`,
-		`Rows:` + fmt.Sprintf("%v", this.Rows) + `,`,
 		`}`,
 	}, "")
 	return s
@@ -1986,6 +2813,102 @@ func (this *Cursor) String() string {
 		`Y:` + fmt.Sprintf("%v", this.Y) + `,`,
 		`State:` + fmt.Sprintf("%v", this.State) + `,`,
 		`Attr:` + strings.Replace(this.Attr.String(), "Glyph", "Glyph", 1) + `,`,
+		`}`,
+	}, "")
+	return s
+}
+func (this *TcellMessage) String() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&TcellMessage{`,
+		`TcellEvent:` + fmt.Sprintf("%v", this.TcellEvent) + `,`,
+		`}`,
+	}, "")
+	return s
+}
+func (this *TcellMessage_Mouse) String() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&TcellMessage_Mouse{`,
+		`Mouse:` + strings.Replace(fmt.Sprintf("%v", this.Mouse), "EventMouse", "EventMouse", 1) + `,`,
+		`}`,
+	}, "")
+	return s
+}
+func (this *TcellMessage_Key) String() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&TcellMessage_Key{`,
+		`Key:` + strings.Replace(fmt.Sprintf("%v", this.Key), "EventKey", "EventKey", 1) + `,`,
+		`}`,
+	}, "")
+	return s
+}
+func (this *TcellMessage_Resize) String() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&TcellMessage_Resize{`,
+		`Resize:` + strings.Replace(fmt.Sprintf("%v", this.Resize), "EventResize", "EventResize", 1) + `,`,
+		`}`,
+	}, "")
+	return s
+}
+func (this *TcellMessage_Paste) String() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&TcellMessage_Paste{`,
+		`Paste:` + strings.Replace(fmt.Sprintf("%v", this.Paste), "EventPaste", "EventPaste", 1) + `,`,
+		`}`,
+	}, "")
+	return s
+}
+func (this *EventMouse) String() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&EventMouse{`,
+		`X:` + fmt.Sprintf("%v", this.X) + `,`,
+		`Y:` + fmt.Sprintf("%v", this.Y) + `,`,
+		`ButtonMask:` + fmt.Sprintf("%v", this.ButtonMask) + `,`,
+		`ModMask:` + fmt.Sprintf("%v", this.ModMask) + `,`,
+		`}`,
+	}, "")
+	return s
+}
+func (this *EventKey) String() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&EventKey{`,
+		`Key:` + fmt.Sprintf("%v", this.Key) + `,`,
+		`Rune:` + fmt.Sprintf("%v", this.Rune) + `,`,
+		`ModMask:` + fmt.Sprintf("%v", this.ModMask) + `,`,
+		`}`,
+	}, "")
+	return s
+}
+func (this *EventResize) String() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&EventResize{`,
+		`Width:` + fmt.Sprintf("%v", this.Width) + `,`,
+		`Height:` + fmt.Sprintf("%v", this.Height) + `,`,
+		`}`,
+	}, "")
+	return s
+}
+func (this *EventPaste) String() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&EventPaste{`,
+		`Start:` + fmt.Sprintf("%v", this.Start) + `,`,
 		`}`,
 	}, "")
 	return s
@@ -2096,76 +3019,6 @@ func (m *ShareMessage) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 3:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Fd", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowRvt
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthRvt
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthRvt
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			v := &FdMessage{}
-			if err := v.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			m.Event = &ShareMessage_Fd{v}
-			iNdEx = postIndex
-		case 4:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Resize", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowRvt
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthRvt
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthRvt
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			v := &ResizeMessage{}
-			if err := v.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			m.Event = &ShareMessage_Resize{v}
-			iNdEx = postIndex
-		case 5:
-			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field State", wireType)
 			}
 			var msglen int
@@ -2198,6 +3051,41 @@ func (m *ShareMessage) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			m.Event = &ShareMessage_State{v}
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Tcell", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowRvt
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthRvt
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthRvt
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			v := &TcellMessage{}
+			if err := v.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			m.Event = &ShareMessage_Tcell{v}
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -2372,94 +3260,6 @@ func (m *FdMessage) Unmarshal(dAtA []byte) error {
 				m.Data = []byte{}
 			}
 			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipRvt(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthRvt
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *ResizeMessage) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowRvt
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: ResizeMessage: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: ResizeMessage: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Cols", wireType)
-			}
-			m.Cols = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowRvt
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.Cols |= uint32(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 2:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Rows", wireType)
-			}
-			m.Rows = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowRvt
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.Rows |= uint32(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
 		default:
 			iNdEx = preIndex
 			skippy, err := skipRvt(dAtA[iNdEx:])
@@ -3022,6 +3822,587 @@ func (m *Cursor) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipRvt(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthRvt
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *TcellMessage) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowRvt
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: TcellMessage: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: TcellMessage: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Mouse", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowRvt
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthRvt
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthRvt
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			v := &EventMouse{}
+			if err := v.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			m.TcellEvent = &TcellMessage_Mouse{v}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Key", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowRvt
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthRvt
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthRvt
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			v := &EventKey{}
+			if err := v.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			m.TcellEvent = &TcellMessage_Key{v}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Resize", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowRvt
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthRvt
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthRvt
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			v := &EventResize{}
+			if err := v.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			m.TcellEvent = &TcellMessage_Resize{v}
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Paste", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowRvt
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthRvt
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthRvt
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			v := &EventPaste{}
+			if err := v.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			m.TcellEvent = &TcellMessage_Paste{v}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipRvt(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthRvt
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *EventMouse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowRvt
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: EventMouse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: EventMouse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field X", wireType)
+			}
+			m.X = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowRvt
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.X |= int64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Y", wireType)
+			}
+			m.Y = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowRvt
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Y |= int64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ButtonMask", wireType)
+			}
+			m.ButtonMask = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowRvt
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.ButtonMask |= int32(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 4:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ModMask", wireType)
+			}
+			m.ModMask = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowRvt
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.ModMask |= int32(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipRvt(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthRvt
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *EventKey) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowRvt
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: EventKey: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: EventKey: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Key", wireType)
+			}
+			m.Key = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowRvt
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Key |= int32(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Rune", wireType)
+			}
+			m.Rune = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowRvt
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Rune |= int32(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ModMask", wireType)
+			}
+			m.ModMask = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowRvt
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.ModMask |= int32(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipRvt(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthRvt
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *EventResize) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowRvt
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: EventResize: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: EventResize: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Width", wireType)
+			}
+			m.Width = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowRvt
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Width |= int64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Height", wireType)
+			}
+			m.Height = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowRvt
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Height |= int64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipRvt(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthRvt
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *EventPaste) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowRvt
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: EventPaste: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: EventPaste: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Start", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowRvt
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.Start = bool(v != 0)
 		default:
 			iNdEx = preIndex
 			skippy, err := skipRvt(dAtA[iNdEx:])

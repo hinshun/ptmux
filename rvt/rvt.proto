@@ -12,9 +12,8 @@ message ShareMessage {
     string id = 1;
     oneof Event {
         InitMessage Init = 2;
-        FdMessage Fd = 3;
-        ResizeMessage Resize = 4;
-        StateMessage State = 5;
+        StateMessage State = 3;
+        TcellMessage Tcell = 4;
     }
 }
 
@@ -25,11 +24,6 @@ message FdMessage {
     uint32 fd = 1;
     bool eof = 2;
     bytes data = 3;
-}
-
-message ResizeMessage {
-    uint32 cols = 1;
-    uint32 rows = 2;
 }
 
 message StateMessage {
@@ -57,4 +51,35 @@ message Cursor {
     int64 y = 2;
     uint32 state = 3;
     Glyph attr = 4;
+}
+
+message TcellMessage {
+    oneof TcellEvent {
+        EventMouse Mouse = 1;
+        EventKey Key = 2;
+        EventResize Resize = 3;
+        EventPaste Paste = 4;
+    }
+}
+
+message EventMouse {
+    int64 x = 1;
+    int64 y = 2;
+    int32 button_mask = 3;
+    int32 mod_mask = 4;
+}
+
+message EventKey {
+    int32 key = 1;
+    int32 rune = 2;
+    int32 mod_mask = 3;
+}
+
+message EventResize {
+    int64 width = 1;
+    int64 height = 2;
+}
+
+message EventPaste {
+    bool start = 1;
 }

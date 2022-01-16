@@ -29,14 +29,14 @@ func (v *View) Update(state *StateMessage) {
 	for _, l := range state.Lines {
 		var glyphs []vt10x.Glyph
 		for _, g := range l.Glyphs {
-			glyphs = append(glyphs, protoGlyphToVTGlyph(g))
+			glyphs = append(glyphs, protoGlyphToVT(g))
 		}
 		lines = append(lines, glyphs)
 	}
 	v.lines = lines
 
 	v.cursor = vt10x.Cursor{
-		Attr:  protoGlyphToVTGlyph(state.Cursor.Attr),
+		Attr:  protoGlyphToVT(state.Cursor.Attr),
 		X:     int(state.Cursor.X),
 		Y:     int(state.Cursor.Y),
 		State: uint8(state.Cursor.State),

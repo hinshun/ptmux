@@ -94,16 +94,16 @@ func (u *UI) Loop(ctx context.Context) error {
 				u.screen.Sync()
 			default:
 				t, ok := u.view.(vt10x.Terminal)
-				if !ok {
-					continue
-				}
-
-				seq, parsed := eventToBytes(u.view, event, MouseState{}, u.terminfo)
-				if parsed {
-					_, err := t.Write(seq)
-					if err != nil {
-						zerolog.Ctx(ctx).Error().Err(err).Msg("unable to send all input to terminal")
+				if ok { // Host
+					seq, parsed := eventToBytes(u.view, event, MouseState{}, u.terminfo)
+					if parsed {
+						_, err := t.Write(seq)
+						if err != nil {
+							zerolog.Ctx(ctx).Error().Err(err).Msg("unable to send all input to terminal")
+						}
 					}
+				} else { // Client
+
 				}
 			}
 		}

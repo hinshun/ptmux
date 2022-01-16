@@ -96,8 +96,6 @@ func (s *Server) Share(srv Terminal_ShareServer) error {
 					s.term.Subscribe(shareMsg.Id, updateCh)
 					updateCh <- "init"
 				})
-			case *ShareMessage_Fd:
-			case *ShareMessage_Resize:
 			}
 		}
 	})
@@ -129,7 +127,7 @@ func terminalShareState(id string, term *terminal.Terminal) *ShareMessage {
 		line := &Line{}
 		for x := 0; x < cols; x++ {
 			glyph := term.Cell(x, y)
-			line.Glyphs = append(line.Glyphs, vtGlyphToProtoGlyph(glyph))
+			line.Glyphs = append(line.Glyphs, vtGlyphToProto(glyph))
 		}
 		lines = append(lines, line)
 	}
@@ -147,7 +145,7 @@ func terminalShareState(id string, term *terminal.Terminal) *ShareMessage {
 					X:     int64(cursor.X),
 					Y:     int64(cursor.Y),
 					State: uint32(cursor.State),
-					Attr:  vtGlyphToProtoGlyph(cursor.Attr),
+					Attr:  vtGlyphToProto(cursor.Attr),
 				},
 				Lines: lines,
 			},
@@ -155,7 +153,7 @@ func terminalShareState(id string, term *terminal.Terminal) *ShareMessage {
 	}
 }
 
-func vtGlyphToProtoGlyph(glyph vt10x.Glyph) *Glyph {
+func vtGlyphToProto(glyph vt10x.Glyph) *Glyph {
 	return &Glyph{
 		Rune: int32(glyph.Char),
 		Mode: int32(glyph.Mode),
@@ -164,7 +162,7 @@ func vtGlyphToProtoGlyph(glyph vt10x.Glyph) *Glyph {
 	}
 }
 
-func protoGlyphToVTGlyph(glyph *Glyph) vt10x.Glyph {
+func protoGlyphToVT(glyph *Glyph) vt10x.Glyph {
 	return vt10x.Glyph{
 		Char: rune(glyph.Rune),
 		Mode: int16(glyph.Mode),
