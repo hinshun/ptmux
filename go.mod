@@ -7,7 +7,7 @@ require (
 	github.com/gcla/gowid v1.3.0
 	github.com/gdamore/tcell/v2 v2.4.0
 	github.com/gogo/protobuf v1.3.2
-	github.com/hinshun/vt10x v0.0.0-20220115061537-4526f461cf66
+	github.com/hinshun/vt10x v0.0.0-20220119200601-820417d04eec
 	github.com/libp2p/go-libp2p v0.17.0
 	github.com/libp2p/go-libp2p-core v0.13.0
 	github.com/libp2p/go-libp2p-discovery v0.6.0
@@ -20,4 +20,4 @@ require (
 	google.golang.org/grpc v1.43.0
 )
 
-replace github.com/gcla/gowid => github.com/hinshun/gowid v1.3.1-0.20220119030521-02904aead290
+replace github.com/gcla/gowid => github.com/hinshun/gowid v1.3.1-0.20220124231037-1783aa2cea74

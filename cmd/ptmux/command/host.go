@@ -5,7 +5,6 @@ import (
 	"os"
 
 	"github.com/hinshun/ptmux/pkg/p2p"
-	"github.com/hinshun/ptmux/pkg/terminal"
 	"github.com/hinshun/ptmux/rvt"
 	"github.com/hinshun/ptmux/ui"
 	gostream "github.com/libp2p/go-libp2p-gostream"
@@ -29,12 +28,7 @@ var hostCommand = &cli.Command{
 		logger := zerolog.Ctx(ctx).Output(zerolog.ConsoleWriter{Out: logs})
 		ctx = logger.WithContext(ctx)
 
-		t, err := terminal.New(ctx)
-		if err != nil {
-			return err
-		}
-
-		u, err := ui.New(t)
+		ui, err := ui.New()
 		if err != nil {
 			return err
 		}
@@ -42,28 +36,10 @@ var hostCommand = &cli.Command{
 		ctx, cancel := context.WithCancel(ctx)
 		eg, ctx := errgroup.WithContext(ctx)
 
-		renderCh := make(chan string, 1)
-		t.Subscribe("host", renderCh)
-
-		eg.Go(func() error {
-			return u.Loop(ctx, nil)
-		})
-
 		eg.Go(func() error {
 			defer cancel()
-			for {
-				select {
-				case <-ctx.Done():
-					return nil
-				case <-t.Done():
-					return nil
-				case <-renderCh:
-				}
-				t.Lock()
-				cols, rows := t.Size()
-				u.Render(t.Title(), cols, rows)
-				t.Unlock()
-			}
+			ui.Loop()
+			return nil
 		})
 
 		opts := []grpc.ServerOption{}
@@ -76,14 +52,14 @@ var hostCommand = &cli.Command{
 			}
 			defer p.Close()
 
-			termSrv := rvt.NewServer(t, p.ID().String())
-			defer termSrv.Close()
+			screenSrv := rvt.NewServer(ctx, ui.Screen(), p.ID().String())
+			defer screenSrv.Close()
 
-			rvt.RegisterTerminalServer(grpcSrv, termSrv)
+			rvt.RegisterScreenServer(grpcSrv, screenSrv)
 
 			go func() {
 				<-ctx.Done()
-				termSrv.Cancel()
+				screenSrv.Cancel()
 				grpcSrv.GracefulStop()
 			}()
 

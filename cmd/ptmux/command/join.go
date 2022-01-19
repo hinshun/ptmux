@@ -1,17 +1,17 @@
 package command
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"io"
 	"net"
 	"os"
-	"sync"
 	"time"
 
+	tcell "github.com/gdamore/tcell/v2"
 	"github.com/hinshun/ptmux/pkg/p2p"
 	"github.com/hinshun/ptmux/rvt"
-	"github.com/hinshun/ptmux/ui"
 	gostream "github.com/libp2p/go-libp2p-gostream"
 	"github.com/rs/zerolog"
 	cli "github.com/urfave/cli/v2"
@@ -64,16 +64,18 @@ var joinCommand = &cli.Command{
 			}
 		}
 
-		termClient := rvt.NewTerminalClient(conn)
-		shareClient, err := termClient.Share(ctx)
+		screenClient := rvt.NewScreenClient(conn)
+		shareClient, err := screenClient.Share(ctx)
 		if err != nil {
 			return err
 		}
 
+		ctx, cancel := context.WithCancel(ctx)
 		eg, ctx := errgroup.WithContext(ctx)
 
 		recvMsgs := make(chan *rvt.ShareMessage)
 		eg.Go(func() error {
+			defer close(recvMsgs)
 			for {
 				shareMsg, err := shareClient.Recv()
 				if err != nil {
@@ -91,7 +93,7 @@ var joinCommand = &cli.Command{
 		})
 
 		sendMsgs := make(chan *rvt.ShareMessage)
-		eg.Go  (func() error {
+		eg.Go(func() error {
 			defer shareClient.CloseSend()
 			for msg := range sendMsgs {
 				err := shareClient.Send(msg)
@@ -106,22 +108,27 @@ var joinCommand = &cli.Command{
 		eg.Go(func() error {
 			sendMsgs <- &rvt.ShareMessage{
 				Id: p.ID().String(),
-				Event: &rvt.ShareMessage_Init{
+				Message: &rvt.ShareMessage_Init{
 					Init: &rvt.InitMessage{},
 				},
 			}
+			zerolog.Ctx(ctx).Info().Msg("Sent init message")
 			return nil
 		})
 
-		view := rvt.NewView()
-		r, err := ui.New(view)
+		s, err := tcell.NewScreen()
 		if err != nil {
 			return err
 		}
 
-		var readyOnce sync.Once
-		ready := make(chan struct{})
-		renderCh := make(chan struct{}, 1)
+		err = s.Init()
+		if err != nil {
+			return err
+		}
+		s.EnableMouse()
+		s.EnablePaste()
+		s.Clear()
+
 		eg.Go(func() error {
 			for {
 				var shareMsg *rvt.ShareMessage
@@ -134,56 +141,83 @@ var joinCommand = &cli.Command{
 					return nil
 				}
 
-				switch evt := shareMsg.GetEvent().(type) {
-				case *rvt.ShareMessage_State:
-					view.Lock()
-					view.Update(evt.State)
-					view.Unlock()
-					renderCh <- struct{}{}
-					readyOnce.Do(func() {
-						close(ready)
-					})
+				switch evt := shareMsg.Message.(type) {
+				case *rvt.ShareMessage_Render:
+					rvt.RenderToScreen(evt.Render, s)
 				}
 			}
 		})
 
-		tcellMsgs := make(chan *rvt.TcellMessage, 1)
-		eg.Go  (func() error {
+		eventMsgs := make(chan *rvt.EventMessage, 1)
+		eg.Go(func() error {
+			defer close(sendMsgs)
 			for {
-				var tcellMsg *rvt.TcellMessage
+				var eventMsg *rvt.EventMessage
 				select {
 				case <-ctx.Done():
 					return nil
-				case tcellMsg = <-tcellMsgs:
+				case eventMsg = <-eventMsgs:
 				}
-				if tcellMsg == nil {
+				if eventMsg == nil {
 					return nil
 				}
 				sendMsgs <- &rvt.ShareMessage{
 					Id: p.ID().String(),
-					Event: &rvt.ShareMessage_Tcell{
-						Tcell: tcellMsg,
+					Message: &rvt.ShareMessage_Event{
+						Event: eventMsg,
 					},
 				}
 			}
 		})
 
 		eg.Go(func() error {
-			<-ready
-			return r.Loop(ctx, tcellMsgs)
-		})
+			eventCh := make(chan tcell.Event, 4)
+			go func() {
+				defer close(eventCh)
+				for {
+					event := s.PollEvent()
+					if event == nil {
+						return
+					}
+					eventCh <- event
+				}
+			}()
 
-		eg.Go(func() error {
+			defer func() {
+				cancel()
+				s.Fini()
+				// Drain remaining events.
+				for _ = range eventCh {
+				}
+			}()
+
+			prevWasMouseMove := false
 			for {
 				select {
 				case <-ctx.Done():
 					return nil
-				case <-renderCh:
+				case ev := <-eventCh:
+					switch evt := ev.(type) {
+					case *tcell.EventKey:
+						if evt.Key() == tcell.KeyCtrlQ {
+							return nil
+						}
+					case *tcell.EventMouse:
+						if evt.Modifiers() == 0 && evt.Buttons() == 0 {
+							if prevWasMouseMove {
+								continue
+							}
+							prevWasMouseMove = true
+						} else {
+							prevWasMouseMove = false
+						}
+					}
+					msg := rvt.EventToProto(ev)
+					if msg != nil {
+						eventMsgs <- msg
+					}
 				}
-				view.Lock()
-				cols, rows := view.Size()
-				r.Render(view.Title(), cols, rows)
-				view.Unlock()
+
 			}
 		})
 

@@ -4,7 +4,6 @@
 package rvt
 
 import (
-	bytes "bytes"
 	context "context"
 	fmt "fmt"
 	proto "github.com/gogo/protobuf/proto"
@@ -31,11 +30,11 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 type ShareMessage struct {
 	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	// Types that are valid to be assigned to Event:
+	// Types that are valid to be assigned to Message:
 	//	*ShareMessage_Init
-	//	*ShareMessage_State
-	//	*ShareMessage_Tcell
-	Event isShareMessage_Event `protobuf_oneof:"Event"`
+	//	*ShareMessage_Render
+	//	*ShareMessage_Event
+	Message isShareMessage_Message `protobuf_oneof:"Message"`
 }
 
 func (m *ShareMessage) Reset()      { *m = ShareMessage{} }
@@ -70,8 +69,8 @@ func (m *ShareMessage) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_ShareMessage proto.InternalMessageInfo
 
-type isShareMessage_Event interface {
-	isShareMessage_Event()
+type isShareMessage_Message interface {
+	isShareMessage_Message()
 	Equal(interface{}) bool
 	MarshalTo([]byte) (int, error)
 	Size() int
@@ -80,20 +79,20 @@ type isShareMessage_Event interface {
 type ShareMessage_Init struct {
 	Init *InitMessage `protobuf:"bytes,2,opt,name=Init,proto3,oneof" json:"Init,omitempty"`
 }
-type ShareMessage_State struct {
-	State *StateMessage `protobuf:"bytes,3,opt,name=State,proto3,oneof" json:"State,omitempty"`
+type ShareMessage_Render struct {
+	Render *RenderMessage `protobuf:"bytes,3,opt,name=Render,proto3,oneof" json:"Render,omitempty"`
 }
-type ShareMessage_Tcell struct {
-	Tcell *TcellMessage `protobuf:"bytes,4,opt,name=Tcell,proto3,oneof" json:"Tcell,omitempty"`
+type ShareMessage_Event struct {
+	Event *EventMessage `protobuf:"bytes,4,opt,name=Event,proto3,oneof" json:"Event,omitempty"`
 }
 
-func (*ShareMessage_Init) isShareMessage_Event()  {}
-func (*ShareMessage_State) isShareMessage_Event() {}
-func (*ShareMessage_Tcell) isShareMessage_Event() {}
+func (*ShareMessage_Init) isShareMessage_Message()   {}
+func (*ShareMessage_Render) isShareMessage_Message() {}
+func (*ShareMessage_Event) isShareMessage_Message()  {}
 
-func (m *ShareMessage) GetEvent() isShareMessage_Event {
+func (m *ShareMessage) GetMessage() isShareMessage_Message {
 	if m != nil {
-		return m.Event
+		return m.Message
 	}
 	return nil
 }
@@ -106,22 +105,22 @@ func (m *ShareMessage) GetId() string {
 }
 
 func (m *ShareMessage) GetInit() *InitMessage {
-	if x, ok := m.GetEvent().(*ShareMessage_Init); ok {
+	if x, ok := m.GetMessage().(*ShareMessage_Init); ok {
 		return x.Init
 	}
 	return nil
 }
 
-func (m *ShareMessage) GetState() *StateMessage {
-	if x, ok := m.GetEvent().(*ShareMessage_State); ok {
-		return x.State
+func (m *ShareMessage) GetRender() *RenderMessage {
+	if x, ok := m.GetMessage().(*ShareMessage_Render); ok {
+		return x.Render
 	}
 	return nil
 }
 
-func (m *ShareMessage) GetTcell() *TcellMessage {
-	if x, ok := m.GetEvent().(*ShareMessage_Tcell); ok {
-		return x.Tcell
+func (m *ShareMessage) GetEvent() *EventMessage {
+	if x, ok := m.GetMessage().(*ShareMessage_Event); ok {
+		return x.Event
 	}
 	return nil
 }
@@ -130,8 +129,8 @@ func (m *ShareMessage) GetTcell() *TcellMessage {
 func (*ShareMessage) XXX_OneofWrappers() []interface{} {
 	return []interface{}{
 		(*ShareMessage_Init)(nil),
-		(*ShareMessage_State)(nil),
-		(*ShareMessage_Tcell)(nil),
+		(*ShareMessage_Render)(nil),
+		(*ShareMessage_Event)(nil),
 	}
 }
 
@@ -170,23 +169,23 @@ func (m *InitMessage) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_InitMessage proto.InternalMessageInfo
 
-type FdMessage struct {
-	Fd   uint32 `protobuf:"varint,1,opt,name=fd,proto3" json:"fd,omitempty"`
-	Eof  bool   `protobuf:"varint,2,opt,name=eof,proto3" json:"eof,omitempty"`
-	Data []byte `protobuf:"bytes,3,opt,name=data,proto3" json:"data,omitempty"`
+type RenderMessage struct {
+	Cols   int32    `protobuf:"varint,1,opt,name=cols,proto3" json:"cols,omitempty"`
+	Rows   int32    `protobuf:"varint,2,opt,name=rows,proto3" json:"rows,omitempty"`
+	Glyphs []*Glyph `protobuf:"bytes,3,rep,name=glyphs,proto3" json:"glyphs,omitempty"`
 }
 
-func (m *FdMessage) Reset()      { *m = FdMessage{} }
-func (*FdMessage) ProtoMessage() {}
-func (*FdMessage) Descriptor() ([]byte, []int) {
+func (m *RenderMessage) Reset()      { *m = RenderMessage{} }
+func (*RenderMessage) ProtoMessage() {}
+func (*RenderMessage) Descriptor() ([]byte, []int) {
 	return fileDescriptor_ce9e79630956d2f5, []int{2}
 }
-func (m *FdMessage) XXX_Unmarshal(b []byte) error {
+func (m *RenderMessage) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *FdMessage) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *RenderMessage) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_FdMessage.Marshal(b, m, deterministic)
+		return xxx_messageInfo_RenderMessage.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -196,159 +195,33 @@ func (m *FdMessage) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 		return b[:n], nil
 	}
 }
-func (m *FdMessage) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_FdMessage.Merge(m, src)
+func (m *RenderMessage) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_RenderMessage.Merge(m, src)
 }
-func (m *FdMessage) XXX_Size() int {
+func (m *RenderMessage) XXX_Size() int {
 	return m.Size()
 }
-func (m *FdMessage) XXX_DiscardUnknown() {
-	xxx_messageInfo_FdMessage.DiscardUnknown(m)
+func (m *RenderMessage) XXX_DiscardUnknown() {
+	xxx_messageInfo_RenderMessage.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_FdMessage proto.InternalMessageInfo
+var xxx_messageInfo_RenderMessage proto.InternalMessageInfo
 
-func (m *FdMessage) GetFd() uint32 {
-	if m != nil {
-		return m.Fd
-	}
-	return 0
-}
-
-func (m *FdMessage) GetEof() bool {
-	if m != nil {
-		return m.Eof
-	}
-	return false
-}
-
-func (m *FdMessage) GetData() []byte {
-	if m != nil {
-		return m.Data
-	}
-	return nil
-}
-
-type StateMessage struct {
-	Cols   int64   `protobuf:"varint,1,opt,name=cols,proto3" json:"cols,omitempty"`
-	Rows   int64   `protobuf:"varint,2,opt,name=rows,proto3" json:"rows,omitempty"`
-	Mode   uint32  `protobuf:"varint,3,opt,name=mode,proto3" json:"mode,omitempty"`
-	Title  string  `protobuf:"bytes,4,opt,name=title,proto3" json:"title,omitempty"`
-	Cursor *Cursor `protobuf:"bytes,5,opt,name=cursor,proto3" json:"cursor,omitempty"`
-	Lines  []*Line `protobuf:"bytes,6,rep,name=lines,proto3" json:"lines,omitempty"`
-}
-
-func (m *StateMessage) Reset()      { *m = StateMessage{} }
-func (*StateMessage) ProtoMessage() {}
-func (*StateMessage) Descriptor() ([]byte, []int) {
-	return fileDescriptor_ce9e79630956d2f5, []int{3}
-}
-func (m *StateMessage) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *StateMessage) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_StateMessage.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *StateMessage) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_StateMessage.Merge(m, src)
-}
-func (m *StateMessage) XXX_Size() int {
-	return m.Size()
-}
-func (m *StateMessage) XXX_DiscardUnknown() {
-	xxx_messageInfo_StateMessage.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_StateMessage proto.InternalMessageInfo
-
-func (m *StateMessage) GetCols() int64 {
+func (m *RenderMessage) GetCols() int32 {
 	if m != nil {
 		return m.Cols
 	}
 	return 0
 }
 
-func (m *StateMessage) GetRows() int64 {
+func (m *RenderMessage) GetRows() int32 {
 	if m != nil {
 		return m.Rows
 	}
 	return 0
 }
 
-func (m *StateMessage) GetMode() uint32 {
-	if m != nil {
-		return m.Mode
-	}
-	return 0
-}
-
-func (m *StateMessage) GetTitle() string {
-	if m != nil {
-		return m.Title
-	}
-	return ""
-}
-
-func (m *StateMessage) GetCursor() *Cursor {
-	if m != nil {
-		return m.Cursor
-	}
-	return nil
-}
-
-func (m *StateMessage) GetLines() []*Line {
-	if m != nil {
-		return m.Lines
-	}
-	return nil
-}
-
-type Line struct {
-	Glyphs []*Glyph `protobuf:"bytes,1,rep,name=glyphs,proto3" json:"glyphs,omitempty"`
-}
-
-func (m *Line) Reset()      { *m = Line{} }
-func (*Line) ProtoMessage() {}
-func (*Line) Descriptor() ([]byte, []int) {
-	return fileDescriptor_ce9e79630956d2f5, []int{4}
-}
-func (m *Line) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *Line) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_Line.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *Line) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_Line.Merge(m, src)
-}
-func (m *Line) XXX_Size() int {
-	return m.Size()
-}
-func (m *Line) XXX_DiscardUnknown() {
-	xxx_messageInfo_Line.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_Line proto.InternalMessageInfo
-
-func (m *Line) GetGlyphs() []*Glyph {
+func (m *RenderMessage) GetGlyphs() []*Glyph {
 	if m != nil {
 		return m.Glyphs
 	}
@@ -356,16 +229,20 @@ func (m *Line) GetGlyphs() []*Glyph {
 }
 
 type Glyph struct {
-	Rune int32  `protobuf:"varint,1,opt,name=rune,proto3" json:"rune,omitempty"`
-	Mode int32  `protobuf:"varint,2,opt,name=mode,proto3" json:"mode,omitempty"`
-	Fg   uint32 `protobuf:"varint,3,opt,name=fg,proto3" json:"fg,omitempty"`
-	Bg   uint32 `protobuf:"varint,4,opt,name=bg,proto3" json:"bg,omitempty"`
+	X        int32   `protobuf:"varint,1,opt,name=x,proto3" json:"x,omitempty"`
+	Y        int32   `protobuf:"varint,2,opt,name=y,proto3" json:"y,omitempty"`
+	Mainc    int32   `protobuf:"varint,3,opt,name=mainc,proto3" json:"mainc,omitempty"`
+	Combc    []int32 `protobuf:"varint,4,rep,packed,name=combc,proto3" json:"combc,omitempty"`
+	Fg       uint64  `protobuf:"varint,5,opt,name=fg,proto3" json:"fg,omitempty"`
+	Bg       uint64  `protobuf:"varint,6,opt,name=bg,proto3" json:"bg,omitempty"`
+	AttrMask int32   `protobuf:"varint,7,opt,name=attr_mask,json=attrMask,proto3" json:"attr_mask,omitempty"`
+	Width    int32   `protobuf:"varint,8,opt,name=width,proto3" json:"width,omitempty"`
 }
 
 func (m *Glyph) Reset()      { *m = Glyph{} }
 func (*Glyph) ProtoMessage() {}
 func (*Glyph) Descriptor() ([]byte, []int) {
-	return fileDescriptor_ce9e79630956d2f5, []int{5}
+	return fileDescriptor_ce9e79630956d2f5, []int{3}
 }
 func (m *Glyph) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -394,121 +271,82 @@ func (m *Glyph) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_Glyph proto.InternalMessageInfo
 
-func (m *Glyph) GetRune() int32 {
-	if m != nil {
-		return m.Rune
-	}
-	return 0
-}
-
-func (m *Glyph) GetMode() int32 {
-	if m != nil {
-		return m.Mode
-	}
-	return 0
-}
-
-func (m *Glyph) GetFg() uint32 {
-	if m != nil {
-		return m.Fg
-	}
-	return 0
-}
-
-func (m *Glyph) GetBg() uint32 {
-	if m != nil {
-		return m.Bg
-	}
-	return 0
-}
-
-type Cursor struct {
-	X     int64  `protobuf:"varint,1,opt,name=x,proto3" json:"x,omitempty"`
-	Y     int64  `protobuf:"varint,2,opt,name=y,proto3" json:"y,omitempty"`
-	State uint32 `protobuf:"varint,3,opt,name=state,proto3" json:"state,omitempty"`
-	Attr  *Glyph `protobuf:"bytes,4,opt,name=attr,proto3" json:"attr,omitempty"`
-}
-
-func (m *Cursor) Reset()      { *m = Cursor{} }
-func (*Cursor) ProtoMessage() {}
-func (*Cursor) Descriptor() ([]byte, []int) {
-	return fileDescriptor_ce9e79630956d2f5, []int{6}
-}
-func (m *Cursor) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *Cursor) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_Cursor.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *Cursor) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_Cursor.Merge(m, src)
-}
-func (m *Cursor) XXX_Size() int {
-	return m.Size()
-}
-func (m *Cursor) XXX_DiscardUnknown() {
-	xxx_messageInfo_Cursor.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_Cursor proto.InternalMessageInfo
-
-func (m *Cursor) GetX() int64 {
+func (m *Glyph) GetX() int32 {
 	if m != nil {
 		return m.X
 	}
 	return 0
 }
 
-func (m *Cursor) GetY() int64 {
+func (m *Glyph) GetY() int32 {
 	if m != nil {
 		return m.Y
 	}
 	return 0
 }
 
-func (m *Cursor) GetState() uint32 {
+func (m *Glyph) GetMainc() int32 {
 	if m != nil {
-		return m.State
+		return m.Mainc
 	}
 	return 0
 }
 
-func (m *Cursor) GetAttr() *Glyph {
+func (m *Glyph) GetCombc() []int32 {
 	if m != nil {
-		return m.Attr
+		return m.Combc
 	}
 	return nil
 }
 
-type TcellMessage struct {
-	// Types that are valid to be assigned to TcellEvent:
-	//	*TcellMessage_Mouse
-	//	*TcellMessage_Key
-	//	*TcellMessage_Resize
-	//	*TcellMessage_Paste
-	TcellEvent isTcellMessage_TcellEvent `protobuf_oneof:"TcellEvent"`
+func (m *Glyph) GetFg() uint64 {
+	if m != nil {
+		return m.Fg
+	}
+	return 0
 }
 
-func (m *TcellMessage) Reset()      { *m = TcellMessage{} }
-func (*TcellMessage) ProtoMessage() {}
-func (*TcellMessage) Descriptor() ([]byte, []int) {
-	return fileDescriptor_ce9e79630956d2f5, []int{7}
+func (m *Glyph) GetBg() uint64 {
+	if m != nil {
+		return m.Bg
+	}
+	return 0
 }
-func (m *TcellMessage) XXX_Unmarshal(b []byte) error {
+
+func (m *Glyph) GetAttrMask() int32 {
+	if m != nil {
+		return m.AttrMask
+	}
+	return 0
+}
+
+func (m *Glyph) GetWidth() int32 {
+	if m != nil {
+		return m.Width
+	}
+	return 0
+}
+
+type EventMessage struct {
+	// Types that are valid to be assigned to Event:
+	//	*EventMessage_Mouse
+	//	*EventMessage_Key
+	//	*EventMessage_Resize
+	//	*EventMessage_Paste
+	Event isEventMessage_Event `protobuf_oneof:"Event"`
+}
+
+func (m *EventMessage) Reset()      { *m = EventMessage{} }
+func (*EventMessage) ProtoMessage() {}
+func (*EventMessage) Descriptor() ([]byte, []int) {
+	return fileDescriptor_ce9e79630956d2f5, []int{4}
+}
+func (m *EventMessage) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *TcellMessage) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *EventMessage) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_TcellMessage.Marshal(b, m, deterministic)
+		return xxx_messageInfo_EventMessage.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -518,91 +356,91 @@ func (m *TcellMessage) XXX_Marshal(b []byte, deterministic bool) ([]byte, error)
 		return b[:n], nil
 	}
 }
-func (m *TcellMessage) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_TcellMessage.Merge(m, src)
+func (m *EventMessage) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_EventMessage.Merge(m, src)
 }
-func (m *TcellMessage) XXX_Size() int {
+func (m *EventMessage) XXX_Size() int {
 	return m.Size()
 }
-func (m *TcellMessage) XXX_DiscardUnknown() {
-	xxx_messageInfo_TcellMessage.DiscardUnknown(m)
+func (m *EventMessage) XXX_DiscardUnknown() {
+	xxx_messageInfo_EventMessage.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_TcellMessage proto.InternalMessageInfo
+var xxx_messageInfo_EventMessage proto.InternalMessageInfo
 
-type isTcellMessage_TcellEvent interface {
-	isTcellMessage_TcellEvent()
+type isEventMessage_Event interface {
+	isEventMessage_Event()
 	Equal(interface{}) bool
 	MarshalTo([]byte) (int, error)
 	Size() int
 }
 
-type TcellMessage_Mouse struct {
+type EventMessage_Mouse struct {
 	Mouse *EventMouse `protobuf:"bytes,1,opt,name=Mouse,proto3,oneof" json:"Mouse,omitempty"`
 }
-type TcellMessage_Key struct {
+type EventMessage_Key struct {
 	Key *EventKey `protobuf:"bytes,2,opt,name=Key,proto3,oneof" json:"Key,omitempty"`
 }
-type TcellMessage_Resize struct {
+type EventMessage_Resize struct {
 	Resize *EventResize `protobuf:"bytes,3,opt,name=Resize,proto3,oneof" json:"Resize,omitempty"`
 }
-type TcellMessage_Paste struct {
+type EventMessage_Paste struct {
 	Paste *EventPaste `protobuf:"bytes,4,opt,name=Paste,proto3,oneof" json:"Paste,omitempty"`
 }
 
-func (*TcellMessage_Mouse) isTcellMessage_TcellEvent()  {}
-func (*TcellMessage_Key) isTcellMessage_TcellEvent()    {}
-func (*TcellMessage_Resize) isTcellMessage_TcellEvent() {}
-func (*TcellMessage_Paste) isTcellMessage_TcellEvent()  {}
+func (*EventMessage_Mouse) isEventMessage_Event()  {}
+func (*EventMessage_Key) isEventMessage_Event()    {}
+func (*EventMessage_Resize) isEventMessage_Event() {}
+func (*EventMessage_Paste) isEventMessage_Event()  {}
 
-func (m *TcellMessage) GetTcellEvent() isTcellMessage_TcellEvent {
+func (m *EventMessage) GetEvent() isEventMessage_Event {
 	if m != nil {
-		return m.TcellEvent
+		return m.Event
 	}
 	return nil
 }
 
-func (m *TcellMessage) GetMouse() *EventMouse {
-	if x, ok := m.GetTcellEvent().(*TcellMessage_Mouse); ok {
+func (m *EventMessage) GetMouse() *EventMouse {
+	if x, ok := m.GetEvent().(*EventMessage_Mouse); ok {
 		return x.Mouse
 	}
 	return nil
 }
 
-func (m *TcellMessage) GetKey() *EventKey {
-	if x, ok := m.GetTcellEvent().(*TcellMessage_Key); ok {
+func (m *EventMessage) GetKey() *EventKey {
+	if x, ok := m.GetEvent().(*EventMessage_Key); ok {
 		return x.Key
 	}
 	return nil
 }
 
-func (m *TcellMessage) GetResize() *EventResize {
-	if x, ok := m.GetTcellEvent().(*TcellMessage_Resize); ok {
+func (m *EventMessage) GetResize() *EventResize {
+	if x, ok := m.GetEvent().(*EventMessage_Resize); ok {
 		return x.Resize
 	}
 	return nil
 }
 
-func (m *TcellMessage) GetPaste() *EventPaste {
-	if x, ok := m.GetTcellEvent().(*TcellMessage_Paste); ok {
+func (m *EventMessage) GetPaste() *EventPaste {
+	if x, ok := m.GetEvent().(*EventMessage_Paste); ok {
 		return x.Paste
 	}
 	return nil
 }
 
 // XXX_OneofWrappers is for the internal use of the proto package.
-func (*TcellMessage) XXX_OneofWrappers() []interface{} {
+func (*EventMessage) XXX_OneofWrappers() []interface{} {
 	return []interface{}{
-		(*TcellMessage_Mouse)(nil),
-		(*TcellMessage_Key)(nil),
-		(*TcellMessage_Resize)(nil),
-		(*TcellMessage_Paste)(nil),
+		(*EventMessage_Mouse)(nil),
+		(*EventMessage_Key)(nil),
+		(*EventMessage_Resize)(nil),
+		(*EventMessage_Paste)(nil),
 	}
 }
 
 type EventMouse struct {
-	X          int64 `protobuf:"varint,1,opt,name=x,proto3" json:"x,omitempty"`
-	Y          int64 `protobuf:"varint,2,opt,name=y,proto3" json:"y,omitempty"`
+	X          int32 `protobuf:"varint,1,opt,name=x,proto3" json:"x,omitempty"`
+	Y          int32 `protobuf:"varint,2,opt,name=y,proto3" json:"y,omitempty"`
 	ButtonMask int32 `protobuf:"varint,3,opt,name=button_mask,json=buttonMask,proto3" json:"button_mask,omitempty"`
 	ModMask    int32 `protobuf:"varint,4,opt,name=mod_mask,json=modMask,proto3" json:"mod_mask,omitempty"`
 }
@@ -610,7 +448,7 @@ type EventMouse struct {
 func (m *EventMouse) Reset()      { *m = EventMouse{} }
 func (*EventMouse) ProtoMessage() {}
 func (*EventMouse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_ce9e79630956d2f5, []int{8}
+	return fileDescriptor_ce9e79630956d2f5, []int{5}
 }
 func (m *EventMouse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -639,14 +477,14 @@ func (m *EventMouse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_EventMouse proto.InternalMessageInfo
 
-func (m *EventMouse) GetX() int64 {
+func (m *EventMouse) GetX() int32 {
 	if m != nil {
 		return m.X
 	}
 	return 0
 }
 
-func (m *EventMouse) GetY() int64 {
+func (m *EventMouse) GetY() int32 {
 	if m != nil {
 		return m.Y
 	}
@@ -676,7 +514,7 @@ type EventKey struct {
 func (m *EventKey) Reset()      { *m = EventKey{} }
 func (*EventKey) ProtoMessage() {}
 func (*EventKey) Descriptor() ([]byte, []int) {
-	return fileDescriptor_ce9e79630956d2f5, []int{9}
+	return fileDescriptor_ce9e79630956d2f5, []int{6}
 }
 func (m *EventKey) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -727,14 +565,14 @@ func (m *EventKey) GetModMask() int32 {
 }
 
 type EventResize struct {
-	Width  int64 `protobuf:"varint,1,opt,name=width,proto3" json:"width,omitempty"`
-	Height int64 `protobuf:"varint,2,opt,name=height,proto3" json:"height,omitempty"`
+	Width  int32 `protobuf:"varint,1,opt,name=width,proto3" json:"width,omitempty"`
+	Height int32 `protobuf:"varint,2,opt,name=height,proto3" json:"height,omitempty"`
 }
 
 func (m *EventResize) Reset()      { *m = EventResize{} }
 func (*EventResize) ProtoMessage() {}
 func (*EventResize) Descriptor() ([]byte, []int) {
-	return fileDescriptor_ce9e79630956d2f5, []int{10}
+	return fileDescriptor_ce9e79630956d2f5, []int{7}
 }
 func (m *EventResize) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -763,14 +601,14 @@ func (m *EventResize) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_EventResize proto.InternalMessageInfo
 
-func (m *EventResize) GetWidth() int64 {
+func (m *EventResize) GetWidth() int32 {
 	if m != nil {
 		return m.Width
 	}
 	return 0
 }
 
-func (m *EventResize) GetHeight() int64 {
+func (m *EventResize) GetHeight() int32 {
 	if m != nil {
 		return m.Height
 	}
@@ -784,7 +622,7 @@ type EventPaste struct {
 func (m *EventPaste) Reset()      { *m = EventPaste{} }
 func (*EventPaste) ProtoMessage() {}
 func (*EventPaste) Descriptor() ([]byte, []int) {
-	return fileDescriptor_ce9e79630956d2f5, []int{11}
+	return fileDescriptor_ce9e79630956d2f5, []int{8}
 }
 func (m *EventPaste) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -823,12 +661,9 @@ func (m *EventPaste) GetStart() bool {
 func init() {
 	proto.RegisterType((*ShareMessage)(nil), "ptmux.rvt.v1.ShareMessage")
 	proto.RegisterType((*InitMessage)(nil), "ptmux.rvt.v1.InitMessage")
-	proto.RegisterType((*FdMessage)(nil), "ptmux.rvt.v1.FdMessage")
-	proto.RegisterType((*StateMessage)(nil), "ptmux.rvt.v1.StateMessage")
-	proto.RegisterType((*Line)(nil), "ptmux.rvt.v1.Line")
+	proto.RegisterType((*RenderMessage)(nil), "ptmux.rvt.v1.RenderMessage")
 	proto.RegisterType((*Glyph)(nil), "ptmux.rvt.v1.Glyph")
-	proto.RegisterType((*Cursor)(nil), "ptmux.rvt.v1.Cursor")
-	proto.RegisterType((*TcellMessage)(nil), "ptmux.rvt.v1.TcellMessage")
+	proto.RegisterType((*EventMessage)(nil), "ptmux.rvt.v1.EventMessage")
 	proto.RegisterType((*EventMouse)(nil), "ptmux.rvt.v1.EventMouse")
 	proto.RegisterType((*EventKey)(nil), "ptmux.rvt.v1.EventKey")
 	proto.RegisterType((*EventResize)(nil), "ptmux.rvt.v1.EventResize")
@@ -838,50 +673,45 @@ func init() {
 func init() { proto.RegisterFile("rvt.proto", fileDescriptor_ce9e79630956d2f5) }
 
 var fileDescriptor_ce9e79630956d2f5 = []byte{
-	// 685 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x7c, 0x54, 0x3f, 0x6f, 0xd3, 0x40,
-	0x1c, 0xf5, 0xd9, 0xb1, 0x9b, 0xfc, 0x92, 0x20, 0x74, 0x54, 0x95, 0xdb, 0xc1, 0x54, 0x5e, 0x88,
-	0x00, 0x85, 0x92, 0x4e, 0x88, 0x89, 0x56, 0x40, 0x51, 0xa9, 0x8a, 0xae, 0x9d, 0x58, 0x90, 0x13,
-	0x5f, 0x1c, 0xab, 0x8e, 0x5d, 0xd9, 0x97, 0xb4, 0x61, 0xe2, 0x23, 0xf0, 0x31, 0xf8, 0x08, 0x8c,
-	0x8c, 0x8c, 0x1d, 0x3b, 0x12, 0x77, 0x61, 0xec, 0x47, 0x40, 0xf7, 0xbb, 0x6b, 0xeb, 0xa0, 0xa8,
-	0xdb, 0xef, 0xcf, 0x7b, 0xd6, 0x7b, 0xbf, 0xbc, 0x1c, 0x34, 0xf2, 0xa9, 0xe8, 0x9e, 0xe6, 0x99,
-	0xc8, 0x68, 0xeb, 0x54, 0x8c, 0x27, 0xe7, 0x5d, 0x39, 0x98, 0xbe, 0xf4, 0x7f, 0x11, 0x68, 0x1d,
-	0x8d, 0x82, 0x9c, 0x1f, 0xf0, 0xa2, 0x08, 0x22, 0x4e, 0x1f, 0x80, 0x19, 0x87, 0x2e, 0xd9, 0x24,
-	0x9d, 0x06, 0x33, 0xe3, 0x90, 0xbe, 0x80, 0xda, 0x87, 0x34, 0x16, 0xae, 0xb9, 0x49, 0x3a, 0xcd,
-	0xde, 0x7a, 0xb7, 0xca, 0xee, 0xca, 0x8d, 0x26, 0xee, 0x19, 0x0c, 0x81, 0xb4, 0x07, 0xf6, 0x91,
-	0x08, 0x04, 0x77, 0x2d, 0x64, 0x6c, 0x2c, 0x32, 0x70, 0x75, 0x47, 0x51, 0x50, 0xc9, 0x39, 0x1e,
-	0xf0, 0x24, 0x71, 0x6b, 0xcb, 0x38, 0xb8, 0xaa, 0x70, 0xb0, 0xdf, 0x59, 0x01, 0xfb, 0xed, 0x94,
-	0xa7, 0xc2, 0x6f, 0x43, 0xb3, 0xa2, 0xc3, 0x7f, 0x03, 0x8d, 0x77, 0x61, 0xc5, 0xcd, 0x50, 0xb9,
-	0x69, 0x33, 0x73, 0x18, 0xd2, 0x87, 0x60, 0xf1, 0x6c, 0x88, 0x66, 0xea, 0x4c, 0x96, 0x94, 0x42,
-	0x2d, 0x0c, 0x44, 0x80, 0x6a, 0x5b, 0x0c, 0x6b, 0xff, 0xa7, 0x3c, 0x4a, 0x45, 0xa8, 0x04, 0x0d,
-	0xb2, 0xa4, 0xc0, 0x0f, 0x59, 0x0c, 0x6b, 0x39, 0xcb, 0xb3, 0xb3, 0x02, 0xbf, 0x65, 0x31, 0xac,
-	0xe5, 0x6c, 0x9c, 0x85, 0xca, 0x7a, 0x9b, 0x61, 0x4d, 0x57, 0xc1, 0x16, 0xb1, 0x48, 0x38, 0x7a,
-	0x6b, 0x30, 0xd5, 0xd0, 0xe7, 0xe0, 0x0c, 0x26, 0x79, 0x91, 0xe5, 0xae, 0x8d, 0x96, 0x57, 0x17,
-	0x2d, 0xef, 0xe2, 0x8e, 0x69, 0x0c, 0xed, 0x80, 0x9d, 0xc4, 0x29, 0x2f, 0x5c, 0x67, 0xd3, 0xea,
-	0x34, 0x7b, 0x74, 0x11, 0xfc, 0x31, 0x4e, 0x39, 0x53, 0x00, 0x7f, 0x1b, 0x6a, 0xb2, 0xa5, 0xcf,
-	0xc0, 0x89, 0x92, 0xd9, 0xe9, 0x48, 0x6a, 0x96, 0x94, 0x47, 0x8b, 0x94, 0xf7, 0x72, 0xc7, 0x34,
-	0xc4, 0x3f, 0x04, 0x1b, 0x07, 0xe8, 0x69, 0x92, 0x72, 0xf4, 0x69, 0x33, 0xac, 0x6f, 0x3d, 0x99,
-	0x6a, 0x86, 0x9e, 0xe4, 0x59, 0x23, 0xed, 0xd2, 0x1c, 0x46, 0xb2, 0xef, 0x47, 0x68, 0xb0, 0xcd,
-	0xcc, 0x7e, 0xe4, 0x0f, 0xc0, 0x51, 0x0e, 0x68, 0x0b, 0xc8, 0xb9, 0x3e, 0x1b, 0x39, 0x97, 0xdd,
-	0x4c, 0x1f, 0x8c, 0xcc, 0xe4, 0x65, 0x8a, 0xdb, 0xa4, 0xb4, 0x99, 0x6a, 0xe8, 0x13, 0xa8, 0x05,
-	0x42, 0xe4, 0x3a, 0x0a, 0x4b, 0x75, 0x23, 0xc0, 0x9f, 0x13, 0x68, 0x55, 0xa3, 0x41, 0xb7, 0xc0,
-	0x3e, 0xc8, 0x26, 0x85, 0x92, 0xdf, 0xec, 0xb9, 0x8b, 0x54, 0x0c, 0x0b, 0xee, 0x65, 0x86, 0xb0,
-	0xa0, 0x4f, 0xc1, 0xda, 0xe7, 0x33, 0x9d, 0xed, 0xb5, 0x25, 0xf8, 0x7d, 0x3e, 0xdb, 0x33, 0x98,
-	0x04, 0xd1, 0x6d, 0x70, 0x18, 0x2f, 0xe2, 0xaf, 0x37, 0xc1, 0x5e, 0x5f, 0x02, 0x57, 0x80, 0x3d,
-	0x83, 0x69, 0xa8, 0x94, 0xf4, 0x29, 0x28, 0x04, 0xd7, 0x6e, 0x96, 0x49, 0xc2, 0xbd, 0x94, 0x84,
-	0xc5, 0x4e, 0x0b, 0x00, 0x4d, 0xa9, 0x6c, 0x87, 0x00, 0x77, 0xba, 0xef, 0x3d, 0xe6, 0x63, 0x68,
-	0xf6, 0x27, 0x42, 0x64, 0xe9, 0x97, 0x71, 0x50, 0x9c, 0xa0, 0x46, 0x9b, 0x81, 0x1a, 0x1d, 0x04,
-	0xc5, 0x09, 0x5d, 0x87, 0xfa, 0x38, 0x0b, 0xd5, 0xb6, 0x86, 0xdb, 0x95, 0x71, 0x16, 0xca, 0x95,
-	0xbf, 0x0f, 0xf5, 0x1b, 0xb7, 0xf2, 0x1f, 0x72, 0xc2, 0x67, 0x3a, 0x01, 0xb2, 0xbc, 0x0d, 0x85,
-	0x59, 0x09, 0x45, 0xf5, 0x63, 0xd6, 0xe2, 0xc7, 0x5e, 0x43, 0xb3, 0x72, 0x0b, 0xf9, 0x23, 0x9f,
-	0xc5, 0xa1, 0x18, 0x69, 0xdd, 0xaa, 0xa1, 0x6b, 0xe0, 0x8c, 0x78, 0x1c, 0x8d, 0x84, 0x36, 0xa0,
-	0x3b, 0xdf, 0xd7, 0x7e, 0xf1, 0x16, 0x3a, 0x20, 0xb9, 0x40, 0x6e, 0x9d, 0xa9, 0xa6, 0x77, 0x08,
-	0xf5, 0x63, 0x9e, 0x8f, 0xe3, 0x34, 0x48, 0xe8, 0x2e, 0xd8, 0xf8, 0x7a, 0xd1, 0xff, 0x9f, 0x99,
-	0xca, 0x93, 0xb6, 0x71, 0xcf, 0xae, 0x43, 0xb6, 0xc8, 0xce, 0xab, 0x8b, 0xb9, 0x67, 0x5c, 0xce,
-	0x3d, 0xe3, 0x7a, 0xee, 0x91, 0x6f, 0xa5, 0x47, 0x7e, 0x94, 0x1e, 0xf9, 0x5d, 0x7a, 0xe4, 0xa2,
-	0xf4, 0xc8, 0x9f, 0xd2, 0x23, 0x7f, 0x4b, 0xcf, 0xb8, 0x2e, 0x3d, 0xf2, 0xfd, 0xca, 0x33, 0x2e,
-	0xae, 0x3c, 0xe3, 0xf2, 0xca, 0x33, 0x3e, 0x5b, 0xf9, 0x54, 0xf4, 0x1d, 0x7c, 0x53, 0xb7, 0xff,
-	0x05, 0x00, 0x00, 0xff, 0xff, 0x78, 0x76, 0x6e, 0x21, 0x60, 0x05, 0x00, 0x00,
+	// 605 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x7c, 0x54, 0xc1, 0x6e, 0xd3, 0x4c,
+	0x10, 0xf6, 0xc6, 0xb1, 0x93, 0x8c, 0xd3, 0x5f, 0xbf, 0x16, 0x54, 0xb9, 0xad, 0xb4, 0x44, 0x3e,
+	0x45, 0x20, 0x85, 0x92, 0x8a, 0x03, 0xe2, 0x56, 0x84, 0x28, 0xaa, 0x22, 0x21, 0xf7, 0xc6, 0x05,
+	0x39, 0xf1, 0xd6, 0xb1, 0x5a, 0xdb, 0x95, 0xbd, 0x49, 0x6b, 0x4e, 0x3c, 0x02, 0xcf, 0xc0, 0x89,
+	0x17, 0x41, 0xe2, 0xd8, 0x63, 0x0f, 0x1c, 0xa8, 0x73, 0xe1, 0xd8, 0x47, 0x40, 0x3b, 0xbb, 0x10,
+	0x1b, 0x45, 0xbd, 0xcd, 0xcc, 0x37, 0xdf, 0x78, 0xf6, 0xfb, 0x76, 0x0d, 0xbd, 0x7c, 0x29, 0x46,
+	0x17, 0x79, 0x26, 0x32, 0xda, 0xbf, 0x10, 0xc9, 0xe2, 0x6a, 0x24, 0x0b, 0xcb, 0x67, 0xde, 0x37,
+	0x02, 0xfd, 0x93, 0x79, 0x90, 0xf3, 0x09, 0x2f, 0x8a, 0x20, 0xe2, 0xf4, 0x3f, 0x68, 0xc5, 0xa1,
+	0x4b, 0x06, 0x64, 0xd8, 0xf3, 0x5b, 0x71, 0x48, 0x9f, 0x42, 0xfb, 0x6d, 0x1a, 0x0b, 0xb7, 0x35,
+	0x20, 0x43, 0x67, 0xbc, 0x33, 0xaa, 0xb3, 0x47, 0x12, 0xd1, 0xc4, 0x23, 0xc3, 0xc7, 0x46, 0xfa,
+	0x1c, 0x6c, 0x9f, 0xa7, 0x21, 0xcf, 0x5d, 0x13, 0x29, 0x7b, 0x4d, 0x8a, 0xc2, 0xd6, 0x24, 0xdd,
+	0x4c, 0xc7, 0x60, 0xbd, 0x5e, 0xf2, 0x54, 0xb8, 0x6d, 0x64, 0xed, 0x36, 0x59, 0x08, 0xad, 0x49,
+	0xaa, 0xf5, 0xb0, 0x07, 0x1d, 0x5d, 0xf3, 0xb6, 0xc0, 0xa9, 0x2d, 0xe3, 0x85, 0xb0, 0xd5, 0xf8,
+	0x10, 0xa5, 0xd0, 0x9e, 0x65, 0xe7, 0x05, 0x1e, 0xcc, 0xf2, 0x31, 0x96, 0xb5, 0x3c, 0xbb, 0x2c,
+	0xf0, 0x68, 0x96, 0x8f, 0x31, 0x7d, 0x02, 0x76, 0x74, 0x5e, 0x5e, 0xcc, 0x0b, 0xd7, 0x1c, 0x98,
+	0x43, 0x67, 0xfc, 0xa0, 0xb9, 0xc7, 0x1b, 0x89, 0xf9, 0xba, 0xc5, 0xfb, 0x42, 0xc0, 0xc2, 0x0a,
+	0xed, 0x03, 0xb9, 0xd2, 0xb3, 0xc9, 0x95, 0xcc, 0x4a, 0x3d, 0x95, 0x94, 0xf4, 0x21, 0x58, 0x49,
+	0x10, 0xa7, 0x33, 0xd4, 0xc3, 0xf2, 0x55, 0x22, 0xab, 0xb3, 0x2c, 0x99, 0xce, 0xdc, 0xf6, 0xc0,
+	0x94, 0x55, 0x4c, 0xa4, 0xfa, 0xa7, 0x91, 0x6b, 0x0d, 0xc8, 0xb0, 0xed, 0xb7, 0x4e, 0x23, 0x99,
+	0x4f, 0x23, 0xd7, 0x56, 0xf9, 0x34, 0xa2, 0x7b, 0xd0, 0x0b, 0x84, 0xc8, 0x3f, 0x24, 0x41, 0x71,
+	0xe6, 0x76, 0x70, 0x5e, 0x57, 0x16, 0x26, 0x41, 0x71, 0x26, 0x47, 0x5e, 0xc6, 0xa1, 0x98, 0xbb,
+	0x5d, 0xf5, 0x21, 0x4c, 0xbc, 0x1f, 0x04, 0xfa, 0x75, 0xf9, 0xe8, 0x3e, 0x58, 0x93, 0x6c, 0x51,
+	0x70, 0xdc, 0xd7, 0x19, 0xbb, 0x9b, 0x94, 0x96, 0xb8, 0xd4, 0x19, 0x03, 0xfa, 0x18, 0xcc, 0x63,
+	0x5e, 0xea, 0x2b, 0xb0, 0xbd, 0xa1, 0xff, 0x98, 0x97, 0x47, 0x86, 0x2f, 0x9b, 0xe8, 0x81, 0xb4,
+	0xbf, 0x88, 0x3f, 0x72, 0x6d, 0xff, 0xce, 0x86, 0x76, 0xd5, 0xa0, 0xcc, 0x97, 0x91, 0x5c, 0xe9,
+	0x5d, 0x50, 0x08, 0xae, 0xcd, 0xdf, 0xb4, 0x12, 0xe2, 0x72, 0x25, 0x0c, 0x0e, 0x3b, 0xfa, 0xba,
+	0x78, 0x21, 0xc0, 0x7a, 0xe5, 0x7b, 0x7d, 0x78, 0x04, 0xce, 0x74, 0x21, 0x44, 0x96, 0x2a, 0xf5,
+	0x94, 0x1b, 0xa0, 0x4a, 0xa8, 0xdf, 0x0e, 0x74, 0x93, 0x2c, 0x54, 0x68, 0x1b, 0xd1, 0x4e, 0x92,
+	0x85, 0x12, 0xf2, 0x8e, 0xa1, 0xfb, 0xe7, 0xa0, 0xf4, 0x7f, 0x30, 0xcf, 0x78, 0xa9, 0xbf, 0x22,
+	0x43, 0xbc, 0x48, 0x8b, 0x94, 0xff, 0xbd, 0x48, 0x8b, 0x94, 0x37, 0x86, 0x99, 0xcd, 0x61, 0x2f,
+	0xc1, 0xa9, 0xc9, 0xb0, 0xb6, 0x8d, 0xd4, 0x6c, 0xa3, 0xdb, 0x60, 0xcf, 0x79, 0x1c, 0xcd, 0x85,
+	0x9e, 0xaa, 0x33, 0xcf, 0xd3, 0xe7, 0x45, 0x19, 0x24, 0xb7, 0x10, 0x41, 0x2e, 0x90, 0xdb, 0xf5,
+	0x55, 0x32, 0x9e, 0x80, 0x7d, 0x32, 0xcb, 0x39, 0x4f, 0xe9, 0x2b, 0xb0, 0xf0, 0x75, 0xd3, 0x7f,
+	0xde, 0x53, 0xfd, 0xc9, 0xef, 0xde, 0x83, 0x0d, 0xc9, 0x3e, 0x39, 0x7c, 0x71, 0x7d, 0xcb, 0x8c,
+	0x9b, 0x5b, 0x66, 0xdc, 0xdd, 0x32, 0xf2, 0xa9, 0x62, 0xe4, 0x6b, 0xc5, 0xc8, 0xf7, 0x8a, 0x91,
+	0xeb, 0x8a, 0x91, 0x9f, 0x15, 0x23, 0xbf, 0x2a, 0x66, 0xdc, 0x55, 0x8c, 0x7c, 0x5e, 0x31, 0xe3,
+	0x7a, 0xc5, 0x8c, 0x9b, 0x15, 0x33, 0xde, 0x9b, 0xf9, 0x52, 0x4c, 0x6d, 0xfc, 0xe7, 0x1c, 0xfc,
+	0x0e, 0x00, 0x00, 0xff, 0xff, 0xcc, 0x76, 0x51, 0xd5, 0x80, 0x04, 0x00, 0x00,
 }
 
 func (this *ShareMessage) Equal(that interface{}) bool {
@@ -906,13 +736,13 @@ func (this *ShareMessage) Equal(that interface{}) bool {
 	if this.Id != that1.Id {
 		return false
 	}
-	if that1.Event == nil {
-		if this.Event != nil {
+	if that1.Message == nil {
+		if this.Message != nil {
 			return false
 		}
-	} else if this.Event == nil {
+	} else if this.Message == nil {
 		return false
-	} else if !this.Event.Equal(that1.Event) {
+	} else if !this.Message.Equal(that1.Message) {
 		return false
 	}
 	return true
@@ -941,14 +771,14 @@ func (this *ShareMessage_Init) Equal(that interface{}) bool {
 	}
 	return true
 }
-func (this *ShareMessage_State) Equal(that interface{}) bool {
+func (this *ShareMessage_Render) Equal(that interface{}) bool {
 	if that == nil {
 		return this == nil
 	}
 
-	that1, ok := that.(*ShareMessage_State)
+	that1, ok := that.(*ShareMessage_Render)
 	if !ok {
-		that2, ok := that.(ShareMessage_State)
+		that2, ok := that.(ShareMessage_Render)
 		if ok {
 			that1 = &that2
 		} else {
@@ -960,19 +790,19 @@ func (this *ShareMessage_State) Equal(that interface{}) bool {
 	} else if this == nil {
 		return false
 	}
-	if !this.State.Equal(that1.State) {
+	if !this.Render.Equal(that1.Render) {
 		return false
 	}
 	return true
 }
-func (this *ShareMessage_Tcell) Equal(that interface{}) bool {
+func (this *ShareMessage_Event) Equal(that interface{}) bool {
 	if that == nil {
 		return this == nil
 	}
 
-	that1, ok := that.(*ShareMessage_Tcell)
+	that1, ok := that.(*ShareMessage_Event)
 	if !ok {
-		that2, ok := that.(ShareMessage_Tcell)
+		that2, ok := that.(ShareMessage_Event)
 		if ok {
 			that1 = &that2
 		} else {
@@ -984,7 +814,7 @@ func (this *ShareMessage_Tcell) Equal(that interface{}) bool {
 	} else if this == nil {
 		return false
 	}
-	if !this.Tcell.Equal(that1.Tcell) {
+	if !this.Event.Equal(that1.Event) {
 		return false
 	}
 	return true
@@ -1010,44 +840,14 @@ func (this *InitMessage) Equal(that interface{}) bool {
 	}
 	return true
 }
-func (this *FdMessage) Equal(that interface{}) bool {
+func (this *RenderMessage) Equal(that interface{}) bool {
 	if that == nil {
 		return this == nil
 	}
 
-	that1, ok := that.(*FdMessage)
+	that1, ok := that.(*RenderMessage)
 	if !ok {
-		that2, ok := that.(FdMessage)
-		if ok {
-			that1 = &that2
-		} else {
-			return false
-		}
-	}
-	if that1 == nil {
-		return this == nil
-	} else if this == nil {
-		return false
-	}
-	if this.Fd != that1.Fd {
-		return false
-	}
-	if this.Eof != that1.Eof {
-		return false
-	}
-	if !bytes.Equal(this.Data, that1.Data) {
-		return false
-	}
-	return true
-}
-func (this *StateMessage) Equal(that interface{}) bool {
-	if that == nil {
-		return this == nil
-	}
-
-	that1, ok := that.(*StateMessage)
-	if !ok {
-		that2, ok := that.(StateMessage)
+		that2, ok := that.(RenderMessage)
 		if ok {
 			that1 = &that2
 		} else {
@@ -1063,44 +863,6 @@ func (this *StateMessage) Equal(that interface{}) bool {
 		return false
 	}
 	if this.Rows != that1.Rows {
-		return false
-	}
-	if this.Mode != that1.Mode {
-		return false
-	}
-	if this.Title != that1.Title {
-		return false
-	}
-	if !this.Cursor.Equal(that1.Cursor) {
-		return false
-	}
-	if len(this.Lines) != len(that1.Lines) {
-		return false
-	}
-	for i := range this.Lines {
-		if !this.Lines[i].Equal(that1.Lines[i]) {
-			return false
-		}
-	}
-	return true
-}
-func (this *Line) Equal(that interface{}) bool {
-	if that == nil {
-		return this == nil
-	}
-
-	that1, ok := that.(*Line)
-	if !ok {
-		that2, ok := that.(Line)
-		if ok {
-			that1 = &that2
-		} else {
-			return false
-		}
-	}
-	if that1 == nil {
-		return this == nil
-	} else if this == nil {
 		return false
 	}
 	if len(this.Glyphs) != len(that1.Glyphs) {
@@ -1132,11 +894,22 @@ func (this *Glyph) Equal(that interface{}) bool {
 	} else if this == nil {
 		return false
 	}
-	if this.Rune != that1.Rune {
+	if this.X != that1.X {
 		return false
 	}
-	if this.Mode != that1.Mode {
+	if this.Y != that1.Y {
 		return false
+	}
+	if this.Mainc != that1.Mainc {
+		return false
+	}
+	if len(this.Combc) != len(that1.Combc) {
+		return false
+	}
+	for i := range this.Combc {
+		if this.Combc[i] != that1.Combc[i] {
+			return false
+		}
 	}
 	if this.Fg != that1.Fg {
 		return false
@@ -1144,16 +917,22 @@ func (this *Glyph) Equal(that interface{}) bool {
 	if this.Bg != that1.Bg {
 		return false
 	}
+	if this.AttrMask != that1.AttrMask {
+		return false
+	}
+	if this.Width != that1.Width {
+		return false
+	}
 	return true
 }
-func (this *Cursor) Equal(that interface{}) bool {
+func (this *EventMessage) Equal(that interface{}) bool {
 	if that == nil {
 		return this == nil
 	}
 
-	that1, ok := that.(*Cursor)
+	that1, ok := that.(*EventMessage)
 	if !ok {
-		that2, ok := that.(Cursor)
+		that2, ok := that.(EventMessage)
 		if ok {
 			that1 = &that2
 		} else {
@@ -1165,58 +944,25 @@ func (this *Cursor) Equal(that interface{}) bool {
 	} else if this == nil {
 		return false
 	}
-	if this.X != that1.X {
+	if that1.Event == nil {
+		if this.Event != nil {
+			return false
+		}
+	} else if this.Event == nil {
 		return false
-	}
-	if this.Y != that1.Y {
-		return false
-	}
-	if this.State != that1.State {
-		return false
-	}
-	if !this.Attr.Equal(that1.Attr) {
+	} else if !this.Event.Equal(that1.Event) {
 		return false
 	}
 	return true
 }
-func (this *TcellMessage) Equal(that interface{}) bool {
+func (this *EventMessage_Mouse) Equal(that interface{}) bool {
 	if that == nil {
 		return this == nil
 	}
 
-	that1, ok := that.(*TcellMessage)
+	that1, ok := that.(*EventMessage_Mouse)
 	if !ok {
-		that2, ok := that.(TcellMessage)
-		if ok {
-			that1 = &that2
-		} else {
-			return false
-		}
-	}
-	if that1 == nil {
-		return this == nil
-	} else if this == nil {
-		return false
-	}
-	if that1.TcellEvent == nil {
-		if this.TcellEvent != nil {
-			return false
-		}
-	} else if this.TcellEvent == nil {
-		return false
-	} else if !this.TcellEvent.Equal(that1.TcellEvent) {
-		return false
-	}
-	return true
-}
-func (this *TcellMessage_Mouse) Equal(that interface{}) bool {
-	if that == nil {
-		return this == nil
-	}
-
-	that1, ok := that.(*TcellMessage_Mouse)
-	if !ok {
-		that2, ok := that.(TcellMessage_Mouse)
+		that2, ok := that.(EventMessage_Mouse)
 		if ok {
 			that1 = &that2
 		} else {
@@ -1233,14 +979,14 @@ func (this *TcellMessage_Mouse) Equal(that interface{}) bool {
 	}
 	return true
 }
-func (this *TcellMessage_Key) Equal(that interface{}) bool {
+func (this *EventMessage_Key) Equal(that interface{}) bool {
 	if that == nil {
 		return this == nil
 	}
 
-	that1, ok := that.(*TcellMessage_Key)
+	that1, ok := that.(*EventMessage_Key)
 	if !ok {
-		that2, ok := that.(TcellMessage_Key)
+		that2, ok := that.(EventMessage_Key)
 		if ok {
 			that1 = &that2
 		} else {
@@ -1257,14 +1003,14 @@ func (this *TcellMessage_Key) Equal(that interface{}) bool {
 	}
 	return true
 }
-func (this *TcellMessage_Resize) Equal(that interface{}) bool {
+func (this *EventMessage_Resize) Equal(that interface{}) bool {
 	if that == nil {
 		return this == nil
 	}
 
-	that1, ok := that.(*TcellMessage_Resize)
+	that1, ok := that.(*EventMessage_Resize)
 	if !ok {
-		that2, ok := that.(TcellMessage_Resize)
+		that2, ok := that.(EventMessage_Resize)
 		if ok {
 			that1 = &that2
 		} else {
@@ -1281,14 +1027,14 @@ func (this *TcellMessage_Resize) Equal(that interface{}) bool {
 	}
 	return true
 }
-func (this *TcellMessage_Paste) Equal(that interface{}) bool {
+func (this *EventMessage_Paste) Equal(that interface{}) bool {
 	if that == nil {
 		return this == nil
 	}
 
-	that1, ok := that.(*TcellMessage_Paste)
+	that1, ok := that.(*EventMessage_Paste)
 	if !ok {
-		that2, ok := that.(TcellMessage_Paste)
+		that2, ok := that.(EventMessage_Paste)
 		if ok {
 			that1 = &that2
 		} else {
@@ -1426,8 +1172,8 @@ func (this *ShareMessage) GoString() string {
 	s := make([]string, 0, 8)
 	s = append(s, "&rvt.ShareMessage{")
 	s = append(s, "Id: "+fmt.Sprintf("%#v", this.Id)+",\n")
-	if this.Event != nil {
-		s = append(s, "Event: "+fmt.Sprintf("%#v", this.Event)+",\n")
+	if this.Message != nil {
+		s = append(s, "Message: "+fmt.Sprintf("%#v", this.Message)+",\n")
 	}
 	s = append(s, "}")
 	return strings.Join(s, "")
@@ -1440,20 +1186,20 @@ func (this *ShareMessage_Init) GoString() string {
 		`Init:` + fmt.Sprintf("%#v", this.Init) + `}`}, ", ")
 	return s
 }
-func (this *ShareMessage_State) GoString() string {
+func (this *ShareMessage_Render) GoString() string {
 	if this == nil {
 		return "nil"
 	}
-	s := strings.Join([]string{`&rvt.ShareMessage_State{` +
-		`State:` + fmt.Sprintf("%#v", this.State) + `}`}, ", ")
+	s := strings.Join([]string{`&rvt.ShareMessage_Render{` +
+		`Render:` + fmt.Sprintf("%#v", this.Render) + `}`}, ", ")
 	return s
 }
-func (this *ShareMessage_Tcell) GoString() string {
+func (this *ShareMessage_Event) GoString() string {
 	if this == nil {
 		return "nil"
 	}
-	s := strings.Join([]string{`&rvt.ShareMessage_Tcell{` +
-		`Tcell:` + fmt.Sprintf("%#v", this.Tcell) + `}`}, ", ")
+	s := strings.Join([]string{`&rvt.ShareMessage_Event{` +
+		`Event:` + fmt.Sprintf("%#v", this.Event) + `}`}, ", ")
 	return s
 }
 func (this *InitMessage) GoString() string {
@@ -1465,43 +1211,14 @@ func (this *InitMessage) GoString() string {
 	s = append(s, "}")
 	return strings.Join(s, "")
 }
-func (this *FdMessage) GoString() string {
+func (this *RenderMessage) GoString() string {
 	if this == nil {
 		return "nil"
 	}
 	s := make([]string, 0, 7)
-	s = append(s, "&rvt.FdMessage{")
-	s = append(s, "Fd: "+fmt.Sprintf("%#v", this.Fd)+",\n")
-	s = append(s, "Eof: "+fmt.Sprintf("%#v", this.Eof)+",\n")
-	s = append(s, "Data: "+fmt.Sprintf("%#v", this.Data)+",\n")
-	s = append(s, "}")
-	return strings.Join(s, "")
-}
-func (this *StateMessage) GoString() string {
-	if this == nil {
-		return "nil"
-	}
-	s := make([]string, 0, 10)
-	s = append(s, "&rvt.StateMessage{")
+	s = append(s, "&rvt.RenderMessage{")
 	s = append(s, "Cols: "+fmt.Sprintf("%#v", this.Cols)+",\n")
 	s = append(s, "Rows: "+fmt.Sprintf("%#v", this.Rows)+",\n")
-	s = append(s, "Mode: "+fmt.Sprintf("%#v", this.Mode)+",\n")
-	s = append(s, "Title: "+fmt.Sprintf("%#v", this.Title)+",\n")
-	if this.Cursor != nil {
-		s = append(s, "Cursor: "+fmt.Sprintf("%#v", this.Cursor)+",\n")
-	}
-	if this.Lines != nil {
-		s = append(s, "Lines: "+fmt.Sprintf("%#v", this.Lines)+",\n")
-	}
-	s = append(s, "}")
-	return strings.Join(s, "")
-}
-func (this *Line) GoString() string {
-	if this == nil {
-		return "nil"
-	}
-	s := make([]string, 0, 5)
-	s = append(s, "&rvt.Line{")
 	if this.Glyphs != nil {
 		s = append(s, "Glyphs: "+fmt.Sprintf("%#v", this.Glyphs)+",\n")
 	}
@@ -1512,71 +1229,60 @@ func (this *Glyph) GoString() string {
 	if this == nil {
 		return "nil"
 	}
-	s := make([]string, 0, 8)
+	s := make([]string, 0, 12)
 	s = append(s, "&rvt.Glyph{")
-	s = append(s, "Rune: "+fmt.Sprintf("%#v", this.Rune)+",\n")
-	s = append(s, "Mode: "+fmt.Sprintf("%#v", this.Mode)+",\n")
-	s = append(s, "Fg: "+fmt.Sprintf("%#v", this.Fg)+",\n")
-	s = append(s, "Bg: "+fmt.Sprintf("%#v", this.Bg)+",\n")
-	s = append(s, "}")
-	return strings.Join(s, "")
-}
-func (this *Cursor) GoString() string {
-	if this == nil {
-		return "nil"
-	}
-	s := make([]string, 0, 8)
-	s = append(s, "&rvt.Cursor{")
 	s = append(s, "X: "+fmt.Sprintf("%#v", this.X)+",\n")
 	s = append(s, "Y: "+fmt.Sprintf("%#v", this.Y)+",\n")
-	s = append(s, "State: "+fmt.Sprintf("%#v", this.State)+",\n")
-	if this.Attr != nil {
-		s = append(s, "Attr: "+fmt.Sprintf("%#v", this.Attr)+",\n")
-	}
+	s = append(s, "Mainc: "+fmt.Sprintf("%#v", this.Mainc)+",\n")
+	s = append(s, "Combc: "+fmt.Sprintf("%#v", this.Combc)+",\n")
+	s = append(s, "Fg: "+fmt.Sprintf("%#v", this.Fg)+",\n")
+	s = append(s, "Bg: "+fmt.Sprintf("%#v", this.Bg)+",\n")
+	s = append(s, "AttrMask: "+fmt.Sprintf("%#v", this.AttrMask)+",\n")
+	s = append(s, "Width: "+fmt.Sprintf("%#v", this.Width)+",\n")
 	s = append(s, "}")
 	return strings.Join(s, "")
 }
-func (this *TcellMessage) GoString() string {
+func (this *EventMessage) GoString() string {
 	if this == nil {
 		return "nil"
 	}
 	s := make([]string, 0, 8)
-	s = append(s, "&rvt.TcellMessage{")
-	if this.TcellEvent != nil {
-		s = append(s, "TcellEvent: "+fmt.Sprintf("%#v", this.TcellEvent)+",\n")
+	s = append(s, "&rvt.EventMessage{")
+	if this.Event != nil {
+		s = append(s, "Event: "+fmt.Sprintf("%#v", this.Event)+",\n")
 	}
 	s = append(s, "}")
 	return strings.Join(s, "")
 }
-func (this *TcellMessage_Mouse) GoString() string {
+func (this *EventMessage_Mouse) GoString() string {
 	if this == nil {
 		return "nil"
 	}
-	s := strings.Join([]string{`&rvt.TcellMessage_Mouse{` +
+	s := strings.Join([]string{`&rvt.EventMessage_Mouse{` +
 		`Mouse:` + fmt.Sprintf("%#v", this.Mouse) + `}`}, ", ")
 	return s
 }
-func (this *TcellMessage_Key) GoString() string {
+func (this *EventMessage_Key) GoString() string {
 	if this == nil {
 		return "nil"
 	}
-	s := strings.Join([]string{`&rvt.TcellMessage_Key{` +
+	s := strings.Join([]string{`&rvt.EventMessage_Key{` +
 		`Key:` + fmt.Sprintf("%#v", this.Key) + `}`}, ", ")
 	return s
 }
-func (this *TcellMessage_Resize) GoString() string {
+func (this *EventMessage_Resize) GoString() string {
 	if this == nil {
 		return "nil"
 	}
-	s := strings.Join([]string{`&rvt.TcellMessage_Resize{` +
+	s := strings.Join([]string{`&rvt.EventMessage_Resize{` +
 		`Resize:` + fmt.Sprintf("%#v", this.Resize) + `}`}, ", ")
 	return s
 }
-func (this *TcellMessage_Paste) GoString() string {
+func (this *EventMessage_Paste) GoString() string {
 	if this == nil {
 		return "nil"
 	}
-	s := strings.Join([]string{`&rvt.TcellMessage_Paste{` +
+	s := strings.Join([]string{`&rvt.EventMessage_Paste{` +
 		`Paste:` + fmt.Sprintf("%#v", this.Paste) + `}`}, ", ")
 	return s
 }
@@ -1643,45 +1349,45 @@ var _ grpc.ClientConn
 // is compatible with the grpc package it is being compiled against.
 const _ = grpc.SupportPackageIsVersion4
 
-// TerminalClient is the client API for Terminal service.
+// ScreenClient is the client API for Screen service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
-type TerminalClient interface {
-	Share(ctx context.Context, opts ...grpc.CallOption) (Terminal_ShareClient, error)
+type ScreenClient interface {
+	Share(ctx context.Context, opts ...grpc.CallOption) (Screen_ShareClient, error)
 }
 
-type terminalClient struct {
+type screenClient struct {
 	cc *grpc.ClientConn
 }
 
-func NewTerminalClient(cc *grpc.ClientConn) TerminalClient {
-	return &terminalClient{cc}
+func NewScreenClient(cc *grpc.ClientConn) ScreenClient {
+	return &screenClient{cc}
 }
 
-func (c *terminalClient) Share(ctx context.Context, opts ...grpc.CallOption) (Terminal_ShareClient, error) {
-	stream, err := c.cc.NewStream(ctx, &_Terminal_serviceDesc.Streams[0], "/ptmux.rvt.v1.Terminal/Share", opts...)
+func (c *screenClient) Share(ctx context.Context, opts ...grpc.CallOption) (Screen_ShareClient, error) {
+	stream, err := c.cc.NewStream(ctx, &_Screen_serviceDesc.Streams[0], "/ptmux.rvt.v1.Screen/Share", opts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &terminalShareClient{stream}
+	x := &screenShareClient{stream}
 	return x, nil
 }
 
-type Terminal_ShareClient interface {
+type Screen_ShareClient interface {
 	Send(*ShareMessage) error
 	Recv() (*ShareMessage, error)
 	grpc.ClientStream
 }
 
-type terminalShareClient struct {
+type screenShareClient struct {
 	grpc.ClientStream
 }
 
-func (x *terminalShareClient) Send(m *ShareMessage) error {
+func (x *screenShareClient) Send(m *ShareMessage) error {
 	return x.ClientStream.SendMsg(m)
 }
 
-func (x *terminalShareClient) Recv() (*ShareMessage, error) {
+func (x *screenShareClient) Recv() (*ShareMessage, error) {
 	m := new(ShareMessage)
 	if err := x.ClientStream.RecvMsg(m); err != nil {
 		return nil, err
@@ -1689,42 +1395,42 @@ func (x *terminalShareClient) Recv() (*ShareMessage, error) {
 	return m, nil
 }
 
-// TerminalServer is the server API for Terminal service.
-type TerminalServer interface {
-	Share(Terminal_ShareServer) error
+// ScreenServer is the server API for Screen service.
+type ScreenServer interface {
+	Share(Screen_ShareServer) error
 }
 
-// UnimplementedTerminalServer can be embedded to have forward compatible implementations.
-type UnimplementedTerminalServer struct {
+// UnimplementedScreenServer can be embedded to have forward compatible implementations.
+type UnimplementedScreenServer struct {
 }
 
-func (*UnimplementedTerminalServer) Share(srv Terminal_ShareServer) error {
+func (*UnimplementedScreenServer) Share(srv Screen_ShareServer) error {
 	return status.Errorf(codes.Unimplemented, "method Share not implemented")
 }
 
-func RegisterTerminalServer(s *grpc.Server, srv TerminalServer) {
-	s.RegisterService(&_Terminal_serviceDesc, srv)
+func RegisterScreenServer(s *grpc.Server, srv ScreenServer) {
+	s.RegisterService(&_Screen_serviceDesc, srv)
 }
 
-func _Terminal_Share_Handler(srv interface{}, stream grpc.ServerStream) error {
-	return srv.(TerminalServer).Share(&terminalShareServer{stream})
+func _Screen_Share_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(ScreenServer).Share(&screenShareServer{stream})
 }
 
-type Terminal_ShareServer interface {
+type Screen_ShareServer interface {
 	Send(*ShareMessage) error
 	Recv() (*ShareMessage, error)
 	grpc.ServerStream
 }
 
-type terminalShareServer struct {
+type screenShareServer struct {
 	grpc.ServerStream
 }
 
-func (x *terminalShareServer) Send(m *ShareMessage) error {
+func (x *screenShareServer) Send(m *ShareMessage) error {
 	return x.ServerStream.SendMsg(m)
 }
 
-func (x *terminalShareServer) Recv() (*ShareMessage, error) {
+func (x *screenShareServer) Recv() (*ShareMessage, error) {
 	m := new(ShareMessage)
 	if err := x.ServerStream.RecvMsg(m); err != nil {
 		return nil, err
@@ -1732,14 +1438,14 @@ func (x *terminalShareServer) Recv() (*ShareMessage, error) {
 	return m, nil
 }
 
-var _Terminal_serviceDesc = grpc.ServiceDesc{
-	ServiceName: "ptmux.rvt.v1.Terminal",
-	HandlerType: (*TerminalServer)(nil),
+var _Screen_serviceDesc = grpc.ServiceDesc{
+	ServiceName: "ptmux.rvt.v1.Screen",
+	HandlerType: (*ScreenServer)(nil),
 	Methods:     []grpc.MethodDesc{},
 	Streams: []grpc.StreamDesc{
 		{
 			StreamName:    "Share",
-			Handler:       _Terminal_Share_Handler,
+			Handler:       _Screen_Share_Handler,
 			ServerStreams: true,
 			ClientStreams: true,
 		},
@@ -1767,11 +1473,11 @@ func (m *ShareMessage) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if m.Event != nil {
+	if m.Message != nil {
 		{
-			size := m.Event.Size()
+			size := m.Message.Size()
 			i -= size
-			if _, err := m.Event.MarshalTo(dAtA[i:]); err != nil {
+			if _, err := m.Message.MarshalTo(dAtA[i:]); err != nil {
 				return 0, err
 			}
 		}
@@ -1807,16 +1513,16 @@ func (m *ShareMessage_Init) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	}
 	return len(dAtA) - i, nil
 }
-func (m *ShareMessage_State) MarshalTo(dAtA []byte) (int, error) {
+func (m *ShareMessage_Render) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *ShareMessage_State) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *ShareMessage_Render) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
-	if m.State != nil {
+	if m.Render != nil {
 		{
-			size, err := m.State.MarshalToSizedBuffer(dAtA[:i])
+			size, err := m.Render.MarshalToSizedBuffer(dAtA[:i])
 			if err != nil {
 				return 0, err
 			}
@@ -1828,16 +1534,16 @@ func (m *ShareMessage_State) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	}
 	return len(dAtA) - i, nil
 }
-func (m *ShareMessage_Tcell) MarshalTo(dAtA []byte) (int, error) {
+func (m *ShareMessage_Event) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *ShareMessage_Tcell) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *ShareMessage_Event) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
-	if m.Tcell != nil {
+	if m.Event != nil {
 		{
-			size, err := m.Tcell.MarshalToSizedBuffer(dAtA[:i])
+			size, err := m.Event.MarshalToSizedBuffer(dAtA[:i])
 			if err != nil {
 				return 0, err
 			}
@@ -1872,7 +1578,7 @@ func (m *InitMessage) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *FdMessage) Marshal() (dAtA []byte, err error) {
+func (m *RenderMessage) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -1882,128 +1588,12 @@ func (m *FdMessage) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *FdMessage) MarshalTo(dAtA []byte) (int, error) {
+func (m *RenderMessage) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *FdMessage) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if len(m.Data) > 0 {
-		i -= len(m.Data)
-		copy(dAtA[i:], m.Data)
-		i = encodeVarintRvt(dAtA, i, uint64(len(m.Data)))
-		i--
-		dAtA[i] = 0x1a
-	}
-	if m.Eof {
-		i--
-		if m.Eof {
-			dAtA[i] = 1
-		} else {
-			dAtA[i] = 0
-		}
-		i--
-		dAtA[i] = 0x10
-	}
-	if m.Fd != 0 {
-		i = encodeVarintRvt(dAtA, i, uint64(m.Fd))
-		i--
-		dAtA[i] = 0x8
-	}
-	return len(dAtA) - i, nil
-}
-
-func (m *StateMessage) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *StateMessage) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *StateMessage) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if len(m.Lines) > 0 {
-		for iNdEx := len(m.Lines) - 1; iNdEx >= 0; iNdEx-- {
-			{
-				size, err := m.Lines[iNdEx].MarshalToSizedBuffer(dAtA[:i])
-				if err != nil {
-					return 0, err
-				}
-				i -= size
-				i = encodeVarintRvt(dAtA, i, uint64(size))
-			}
-			i--
-			dAtA[i] = 0x32
-		}
-	}
-	if m.Cursor != nil {
-		{
-			size, err := m.Cursor.MarshalToSizedBuffer(dAtA[:i])
-			if err != nil {
-				return 0, err
-			}
-			i -= size
-			i = encodeVarintRvt(dAtA, i, uint64(size))
-		}
-		i--
-		dAtA[i] = 0x2a
-	}
-	if len(m.Title) > 0 {
-		i -= len(m.Title)
-		copy(dAtA[i:], m.Title)
-		i = encodeVarintRvt(dAtA, i, uint64(len(m.Title)))
-		i--
-		dAtA[i] = 0x22
-	}
-	if m.Mode != 0 {
-		i = encodeVarintRvt(dAtA, i, uint64(m.Mode))
-		i--
-		dAtA[i] = 0x18
-	}
-	if m.Rows != 0 {
-		i = encodeVarintRvt(dAtA, i, uint64(m.Rows))
-		i--
-		dAtA[i] = 0x10
-	}
-	if m.Cols != 0 {
-		i = encodeVarintRvt(dAtA, i, uint64(m.Cols))
-		i--
-		dAtA[i] = 0x8
-	}
-	return len(dAtA) - i, nil
-}
-
-func (m *Line) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *Line) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *Line) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *RenderMessage) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -2019,8 +1609,18 @@ func (m *Line) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 				i = encodeVarintRvt(dAtA, i, uint64(size))
 			}
 			i--
-			dAtA[i] = 0xa
+			dAtA[i] = 0x1a
 		}
+	}
+	if m.Rows != 0 {
+		i = encodeVarintRvt(dAtA, i, uint64(m.Rows))
+		i--
+		dAtA[i] = 0x10
+	}
+	if m.Cols != 0 {
+		i = encodeVarintRvt(dAtA, i, uint64(m.Cols))
+		i--
+		dAtA[i] = 0x8
 	}
 	return len(dAtA) - i, nil
 }
@@ -2045,63 +1645,47 @@ func (m *Glyph) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
+	if m.Width != 0 {
+		i = encodeVarintRvt(dAtA, i, uint64(m.Width))
+		i--
+		dAtA[i] = 0x40
+	}
+	if m.AttrMask != 0 {
+		i = encodeVarintRvt(dAtA, i, uint64(m.AttrMask))
+		i--
+		dAtA[i] = 0x38
+	}
 	if m.Bg != 0 {
 		i = encodeVarintRvt(dAtA, i, uint64(m.Bg))
 		i--
-		dAtA[i] = 0x20
+		dAtA[i] = 0x30
 	}
 	if m.Fg != 0 {
 		i = encodeVarintRvt(dAtA, i, uint64(m.Fg))
 		i--
-		dAtA[i] = 0x18
+		dAtA[i] = 0x28
 	}
-	if m.Mode != 0 {
-		i = encodeVarintRvt(dAtA, i, uint64(m.Mode))
-		i--
-		dAtA[i] = 0x10
-	}
-	if m.Rune != 0 {
-		i = encodeVarintRvt(dAtA, i, uint64(m.Rune))
-		i--
-		dAtA[i] = 0x8
-	}
-	return len(dAtA) - i, nil
-}
-
-func (m *Cursor) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *Cursor) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *Cursor) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if m.Attr != nil {
-		{
-			size, err := m.Attr.MarshalToSizedBuffer(dAtA[:i])
-			if err != nil {
-				return 0, err
+	if len(m.Combc) > 0 {
+		dAtA5 := make([]byte, len(m.Combc)*10)
+		var j4 int
+		for _, num1 := range m.Combc {
+			num := uint64(num1)
+			for num >= 1<<7 {
+				dAtA5[j4] = uint8(uint64(num)&0x7f | 0x80)
+				num >>= 7
+				j4++
 			}
-			i -= size
-			i = encodeVarintRvt(dAtA, i, uint64(size))
+			dAtA5[j4] = uint8(num)
+			j4++
 		}
+		i -= j4
+		copy(dAtA[i:], dAtA5[:j4])
+		i = encodeVarintRvt(dAtA, i, uint64(j4))
 		i--
 		dAtA[i] = 0x22
 	}
-	if m.State != 0 {
-		i = encodeVarintRvt(dAtA, i, uint64(m.State))
+	if m.Mainc != 0 {
+		i = encodeVarintRvt(dAtA, i, uint64(m.Mainc))
 		i--
 		dAtA[i] = 0x18
 	}
@@ -2118,7 +1702,7 @@ func (m *Cursor) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *TcellMessage) Marshal() (dAtA []byte, err error) {
+func (m *EventMessage) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -2128,21 +1712,21 @@ func (m *TcellMessage) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *TcellMessage) MarshalTo(dAtA []byte) (int, error) {
+func (m *EventMessage) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *TcellMessage) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *EventMessage) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
-	if m.TcellEvent != nil {
+	if m.Event != nil {
 		{
-			size := m.TcellEvent.Size()
+			size := m.Event.Size()
 			i -= size
-			if _, err := m.TcellEvent.MarshalTo(dAtA[i:]); err != nil {
+			if _, err := m.Event.MarshalTo(dAtA[i:]); err != nil {
 				return 0, err
 			}
 		}
@@ -2150,12 +1734,12 @@ func (m *TcellMessage) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *TcellMessage_Mouse) MarshalTo(dAtA []byte) (int, error) {
+func (m *EventMessage_Mouse) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *TcellMessage_Mouse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *EventMessage_Mouse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	if m.Mouse != nil {
 		{
@@ -2171,12 +1755,12 @@ func (m *TcellMessage_Mouse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	}
 	return len(dAtA) - i, nil
 }
-func (m *TcellMessage_Key) MarshalTo(dAtA []byte) (int, error) {
+func (m *EventMessage_Key) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *TcellMessage_Key) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *EventMessage_Key) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	if m.Key != nil {
 		{
@@ -2192,12 +1776,12 @@ func (m *TcellMessage_Key) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	}
 	return len(dAtA) - i, nil
 }
-func (m *TcellMessage_Resize) MarshalTo(dAtA []byte) (int, error) {
+func (m *EventMessage_Resize) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *TcellMessage_Resize) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *EventMessage_Resize) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	if m.Resize != nil {
 		{
@@ -2213,12 +1797,12 @@ func (m *TcellMessage_Resize) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	}
 	return len(dAtA) - i, nil
 }
-func (m *TcellMessage_Paste) MarshalTo(dAtA []byte) (int, error) {
+func (m *EventMessage_Paste) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *TcellMessage_Paste) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *EventMessage_Paste) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	if m.Paste != nil {
 		{
@@ -2402,8 +1986,8 @@ func (m *ShareMessage) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovRvt(uint64(l))
 	}
-	if m.Event != nil {
-		n += m.Event.Size()
+	if m.Message != nil {
+		n += m.Message.Size()
 	}
 	return n
 }
@@ -2420,26 +2004,26 @@ func (m *ShareMessage_Init) Size() (n int) {
 	}
 	return n
 }
-func (m *ShareMessage_State) Size() (n int) {
+func (m *ShareMessage_Render) Size() (n int) {
 	if m == nil {
 		return 0
 	}
 	var l int
 	_ = l
-	if m.State != nil {
-		l = m.State.Size()
+	if m.Render != nil {
+		l = m.Render.Size()
 		n += 1 + l + sovRvt(uint64(l))
 	}
 	return n
 }
-func (m *ShareMessage_Tcell) Size() (n int) {
+func (m *ShareMessage_Event) Size() (n int) {
 	if m == nil {
 		return 0
 	}
 	var l int
 	_ = l
-	if m.Tcell != nil {
-		l = m.Tcell.Size()
+	if m.Event != nil {
+		l = m.Event.Size()
 		n += 1 + l + sovRvt(uint64(l))
 	}
 	return n
@@ -2453,26 +2037,7 @@ func (m *InitMessage) Size() (n int) {
 	return n
 }
 
-func (m *FdMessage) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	if m.Fd != 0 {
-		n += 1 + sovRvt(uint64(m.Fd))
-	}
-	if m.Eof {
-		n += 2
-	}
-	l = len(m.Data)
-	if l > 0 {
-		n += 1 + l + sovRvt(uint64(l))
-	}
-	return n
-}
-
-func (m *StateMessage) Size() (n int) {
+func (m *RenderMessage) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -2484,32 +2049,6 @@ func (m *StateMessage) Size() (n int) {
 	if m.Rows != 0 {
 		n += 1 + sovRvt(uint64(m.Rows))
 	}
-	if m.Mode != 0 {
-		n += 1 + sovRvt(uint64(m.Mode))
-	}
-	l = len(m.Title)
-	if l > 0 {
-		n += 1 + l + sovRvt(uint64(l))
-	}
-	if m.Cursor != nil {
-		l = m.Cursor.Size()
-		n += 1 + l + sovRvt(uint64(l))
-	}
-	if len(m.Lines) > 0 {
-		for _, e := range m.Lines {
-			l = e.Size()
-			n += 1 + l + sovRvt(uint64(l))
-		}
-	}
-	return n
-}
-
-func (m *Line) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
 	if len(m.Glyphs) > 0 {
 		for _, e := range m.Glyphs {
 			l = e.Size()
@@ -2525,11 +2064,21 @@ func (m *Glyph) Size() (n int) {
 	}
 	var l int
 	_ = l
-	if m.Rune != 0 {
-		n += 1 + sovRvt(uint64(m.Rune))
+	if m.X != 0 {
+		n += 1 + sovRvt(uint64(m.X))
 	}
-	if m.Mode != 0 {
-		n += 1 + sovRvt(uint64(m.Mode))
+	if m.Y != 0 {
+		n += 1 + sovRvt(uint64(m.Y))
+	}
+	if m.Mainc != 0 {
+		n += 1 + sovRvt(uint64(m.Mainc))
+	}
+	if len(m.Combc) > 0 {
+		l = 0
+		for _, e := range m.Combc {
+			l += sovRvt(uint64(e))
+		}
+		n += 1 + sovRvt(uint64(l)) + l
 	}
 	if m.Fg != 0 {
 		n += 1 + sovRvt(uint64(m.Fg))
@@ -2537,44 +2086,28 @@ func (m *Glyph) Size() (n int) {
 	if m.Bg != 0 {
 		n += 1 + sovRvt(uint64(m.Bg))
 	}
+	if m.AttrMask != 0 {
+		n += 1 + sovRvt(uint64(m.AttrMask))
+	}
+	if m.Width != 0 {
+		n += 1 + sovRvt(uint64(m.Width))
+	}
 	return n
 }
 
-func (m *Cursor) Size() (n int) {
+func (m *EventMessage) Size() (n int) {
 	if m == nil {
 		return 0
 	}
 	var l int
 	_ = l
-	if m.X != 0 {
-		n += 1 + sovRvt(uint64(m.X))
-	}
-	if m.Y != 0 {
-		n += 1 + sovRvt(uint64(m.Y))
-	}
-	if m.State != 0 {
-		n += 1 + sovRvt(uint64(m.State))
-	}
-	if m.Attr != nil {
-		l = m.Attr.Size()
-		n += 1 + l + sovRvt(uint64(l))
+	if m.Event != nil {
+		n += m.Event.Size()
 	}
 	return n
 }
 
-func (m *TcellMessage) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	if m.TcellEvent != nil {
-		n += m.TcellEvent.Size()
-	}
-	return n
-}
-
-func (m *TcellMessage_Mouse) Size() (n int) {
+func (m *EventMessage_Mouse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -2586,7 +2119,7 @@ func (m *TcellMessage_Mouse) Size() (n int) {
 	}
 	return n
 }
-func (m *TcellMessage_Key) Size() (n int) {
+func (m *EventMessage_Key) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -2598,7 +2131,7 @@ func (m *TcellMessage_Key) Size() (n int) {
 	}
 	return n
 }
-func (m *TcellMessage_Resize) Size() (n int) {
+func (m *EventMessage_Resize) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -2610,7 +2143,7 @@ func (m *TcellMessage_Resize) Size() (n int) {
 	}
 	return n
 }
-func (m *TcellMessage_Paste) Size() (n int) {
+func (m *EventMessage_Paste) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -2700,7 +2233,7 @@ func (this *ShareMessage) String() string {
 	}
 	s := strings.Join([]string{`&ShareMessage{`,
 		`Id:` + fmt.Sprintf("%v", this.Id) + `,`,
-		`Event:` + fmt.Sprintf("%v", this.Event) + `,`,
+		`Message:` + fmt.Sprintf("%v", this.Message) + `,`,
 		`}`,
 	}, "")
 	return s
@@ -2715,22 +2248,22 @@ func (this *ShareMessage_Init) String() string {
 	}, "")
 	return s
 }
-func (this *ShareMessage_State) String() string {
+func (this *ShareMessage_Render) String() string {
 	if this == nil {
 		return "nil"
 	}
-	s := strings.Join([]string{`&ShareMessage_State{`,
-		`State:` + strings.Replace(fmt.Sprintf("%v", this.State), "StateMessage", "StateMessage", 1) + `,`,
+	s := strings.Join([]string{`&ShareMessage_Render{`,
+		`Render:` + strings.Replace(fmt.Sprintf("%v", this.Render), "RenderMessage", "RenderMessage", 1) + `,`,
 		`}`,
 	}, "")
 	return s
 }
-func (this *ShareMessage_Tcell) String() string {
+func (this *ShareMessage_Event) String() string {
 	if this == nil {
 		return "nil"
 	}
-	s := strings.Join([]string{`&ShareMessage_Tcell{`,
-		`Tcell:` + strings.Replace(fmt.Sprintf("%v", this.Tcell), "TcellMessage", "TcellMessage", 1) + `,`,
+	s := strings.Join([]string{`&ShareMessage_Event{`,
+		`Event:` + strings.Replace(fmt.Sprintf("%v", this.Event), "EventMessage", "EventMessage", 1) + `,`,
 		`}`,
 	}, "")
 	return s
@@ -2744,39 +2277,7 @@ func (this *InitMessage) String() string {
 	}, "")
 	return s
 }
-func (this *FdMessage) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&FdMessage{`,
-		`Fd:` + fmt.Sprintf("%v", this.Fd) + `,`,
-		`Eof:` + fmt.Sprintf("%v", this.Eof) + `,`,
-		`Data:` + fmt.Sprintf("%v", this.Data) + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *StateMessage) String() string {
-	if this == nil {
-		return "nil"
-	}
-	repeatedStringForLines := "[]*Line{"
-	for _, f := range this.Lines {
-		repeatedStringForLines += strings.Replace(f.String(), "Line", "Line", 1) + ","
-	}
-	repeatedStringForLines += "}"
-	s := strings.Join([]string{`&StateMessage{`,
-		`Cols:` + fmt.Sprintf("%v", this.Cols) + `,`,
-		`Rows:` + fmt.Sprintf("%v", this.Rows) + `,`,
-		`Mode:` + fmt.Sprintf("%v", this.Mode) + `,`,
-		`Title:` + fmt.Sprintf("%v", this.Title) + `,`,
-		`Cursor:` + strings.Replace(this.Cursor.String(), "Cursor", "Cursor", 1) + `,`,
-		`Lines:` + repeatedStringForLines + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *Line) String() string {
+func (this *RenderMessage) String() string {
 	if this == nil {
 		return "nil"
 	}
@@ -2785,7 +2286,9 @@ func (this *Line) String() string {
 		repeatedStringForGlyphs += strings.Replace(f.String(), "Glyph", "Glyph", 1) + ","
 	}
 	repeatedStringForGlyphs += "}"
-	s := strings.Join([]string{`&Line{`,
+	s := strings.Join([]string{`&RenderMessage{`,
+		`Cols:` + fmt.Sprintf("%v", this.Cols) + `,`,
+		`Rows:` + fmt.Sprintf("%v", this.Rows) + `,`,
 		`Glyphs:` + repeatedStringForGlyphs + `,`,
 		`}`,
 	}, "")
@@ -2796,72 +2299,63 @@ func (this *Glyph) String() string {
 		return "nil"
 	}
 	s := strings.Join([]string{`&Glyph{`,
-		`Rune:` + fmt.Sprintf("%v", this.Rune) + `,`,
-		`Mode:` + fmt.Sprintf("%v", this.Mode) + `,`,
-		`Fg:` + fmt.Sprintf("%v", this.Fg) + `,`,
-		`Bg:` + fmt.Sprintf("%v", this.Bg) + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *Cursor) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&Cursor{`,
 		`X:` + fmt.Sprintf("%v", this.X) + `,`,
 		`Y:` + fmt.Sprintf("%v", this.Y) + `,`,
-		`State:` + fmt.Sprintf("%v", this.State) + `,`,
-		`Attr:` + strings.Replace(this.Attr.String(), "Glyph", "Glyph", 1) + `,`,
+		`Mainc:` + fmt.Sprintf("%v", this.Mainc) + `,`,
+		`Combc:` + fmt.Sprintf("%v", this.Combc) + `,`,
+		`Fg:` + fmt.Sprintf("%v", this.Fg) + `,`,
+		`Bg:` + fmt.Sprintf("%v", this.Bg) + `,`,
+		`AttrMask:` + fmt.Sprintf("%v", this.AttrMask) + `,`,
+		`Width:` + fmt.Sprintf("%v", this.Width) + `,`,
 		`}`,
 	}, "")
 	return s
 }
-func (this *TcellMessage) String() string {
+func (this *EventMessage) String() string {
 	if this == nil {
 		return "nil"
 	}
-	s := strings.Join([]string{`&TcellMessage{`,
-		`TcellEvent:` + fmt.Sprintf("%v", this.TcellEvent) + `,`,
+	s := strings.Join([]string{`&EventMessage{`,
+		`Event:` + fmt.Sprintf("%v", this.Event) + `,`,
 		`}`,
 	}, "")
 	return s
 }
-func (this *TcellMessage_Mouse) String() string {
+func (this *EventMessage_Mouse) String() string {
 	if this == nil {
 		return "nil"
 	}
-	s := strings.Join([]string{`&TcellMessage_Mouse{`,
+	s := strings.Join([]string{`&EventMessage_Mouse{`,
 		`Mouse:` + strings.Replace(fmt.Sprintf("%v", this.Mouse), "EventMouse", "EventMouse", 1) + `,`,
 		`}`,
 	}, "")
 	return s
 }
-func (this *TcellMessage_Key) String() string {
+func (this *EventMessage_Key) String() string {
 	if this == nil {
 		return "nil"
 	}
-	s := strings.Join([]string{`&TcellMessage_Key{`,
+	s := strings.Join([]string{`&EventMessage_Key{`,
 		`Key:` + strings.Replace(fmt.Sprintf("%v", this.Key), "EventKey", "EventKey", 1) + `,`,
 		`}`,
 	}, "")
 	return s
 }
-func (this *TcellMessage_Resize) String() string {
+func (this *EventMessage_Resize) String() string {
 	if this == nil {
 		return "nil"
 	}
-	s := strings.Join([]string{`&TcellMessage_Resize{`,
+	s := strings.Join([]string{`&EventMessage_Resize{`,
 		`Resize:` + strings.Replace(fmt.Sprintf("%v", this.Resize), "EventResize", "EventResize", 1) + `,`,
 		`}`,
 	}, "")
 	return s
 }
-func (this *TcellMessage_Paste) String() string {
+func (this *EventMessage_Paste) String() string {
 	if this == nil {
 		return "nil"
 	}
-	s := strings.Join([]string{`&TcellMessage_Paste{`,
+	s := strings.Join([]string{`&EventMessage_Paste{`,
 		`Paste:` + strings.Replace(fmt.Sprintf("%v", this.Paste), "EventPaste", "EventPaste", 1) + `,`,
 		`}`,
 	}, "")
@@ -3015,11 +2509,11 @@ func (m *ShareMessage) Unmarshal(dAtA []byte) error {
 			if err := v.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
-			m.Event = &ShareMessage_Init{v}
+			m.Message = &ShareMessage_Init{v}
 			iNdEx = postIndex
 		case 3:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field State", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Render", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -3046,15 +2540,15 @@ func (m *ShareMessage) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			v := &StateMessage{}
+			v := &RenderMessage{}
 			if err := v.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
-			m.Event = &ShareMessage_State{v}
+			m.Message = &ShareMessage_Render{v}
 			iNdEx = postIndex
 		case 4:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Tcell", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Event", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -3081,11 +2575,11 @@ func (m *ShareMessage) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			v := &TcellMessage{}
+			v := &EventMessage{}
 			if err := v.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
-			m.Event = &ShareMessage_Tcell{v}
+			m.Message = &ShareMessage_Event{v}
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -3158,7 +2652,7 @@ func (m *InitMessage) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *FdMessage) Unmarshal(dAtA []byte) error {
+func (m *RenderMessage) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -3181,133 +2675,10 @@ func (m *FdMessage) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: FdMessage: wiretype end group for non-group")
+			return fmt.Errorf("proto: RenderMessage: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: FdMessage: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Fd", wireType)
-			}
-			m.Fd = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowRvt
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.Fd |= uint32(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 2:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Eof", wireType)
-			}
-			var v int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowRvt
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				v |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			m.Eof = bool(v != 0)
-		case 3:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Data", wireType)
-			}
-			var byteLen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowRvt
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				byteLen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if byteLen < 0 {
-				return ErrInvalidLengthRvt
-			}
-			postIndex := iNdEx + byteLen
-			if postIndex < 0 {
-				return ErrInvalidLengthRvt
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Data = append(m.Data[:0], dAtA[iNdEx:postIndex]...)
-			if m.Data == nil {
-				m.Data = []byte{}
-			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipRvt(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthRvt
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *StateMessage) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowRvt
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: StateMessage: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: StateMessage: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: RenderMessage: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -3324,7 +2695,7 @@ func (m *StateMessage) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.Cols |= int64(b&0x7F) << shift
+				m.Cols |= int32(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -3343,183 +2714,12 @@ func (m *StateMessage) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.Rows |= int64(b&0x7F) << shift
+				m.Rows |= int32(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
 		case 3:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Mode", wireType)
-			}
-			m.Mode = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowRvt
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.Mode |= uint32(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 4:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Title", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowRvt
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthRvt
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthRvt
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Title = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 5:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Cursor", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowRvt
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthRvt
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthRvt
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.Cursor == nil {
-				m.Cursor = &Cursor{}
-			}
-			if err := m.Cursor.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 6:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Lines", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowRvt
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthRvt
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthRvt
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Lines = append(m.Lines, &Line{})
-			if err := m.Lines[len(m.Lines)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipRvt(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthRvt
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *Line) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowRvt
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: Line: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: Line: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Glyphs", wireType)
 			}
@@ -3605,132 +2805,6 @@ func (m *Glyph) Unmarshal(dAtA []byte) error {
 		switch fieldNum {
 		case 1:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Rune", wireType)
-			}
-			m.Rune = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowRvt
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.Rune |= int32(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 2:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Mode", wireType)
-			}
-			m.Mode = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowRvt
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.Mode |= int32(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 3:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Fg", wireType)
-			}
-			m.Fg = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowRvt
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.Fg |= uint32(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 4:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Bg", wireType)
-			}
-			m.Bg = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowRvt
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.Bg |= uint32(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		default:
-			iNdEx = preIndex
-			skippy, err := skipRvt(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthRvt
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *Cursor) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowRvt
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: Cursor: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: Cursor: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field X", wireType)
 			}
 			m.X = 0
@@ -3743,7 +2817,7 @@ func (m *Cursor) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.X |= int64(b&0x7F) << shift
+				m.X |= int32(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -3762,16 +2836,16 @@ func (m *Cursor) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.Y |= int64(b&0x7F) << shift
+				m.Y |= int32(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
 		case 3:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field State", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Mainc", wireType)
 			}
-			m.State = 0
+			m.Mainc = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowRvt
@@ -3781,16 +2855,92 @@ func (m *Cursor) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.State |= uint32(b&0x7F) << shift
+				m.Mainc |= int32(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
 		case 4:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Attr", wireType)
+			if wireType == 0 {
+				var v int32
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowRvt
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					v |= int32(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				m.Combc = append(m.Combc, v)
+			} else if wireType == 2 {
+				var packedLen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowRvt
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					packedLen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if packedLen < 0 {
+					return ErrInvalidLengthRvt
+				}
+				postIndex := iNdEx + packedLen
+				if postIndex < 0 {
+					return ErrInvalidLengthRvt
+				}
+				if postIndex > l {
+					return io.ErrUnexpectedEOF
+				}
+				var elementCount int
+				var count int
+				for _, integer := range dAtA[iNdEx:postIndex] {
+					if integer < 128 {
+						count++
+					}
+				}
+				elementCount = count
+				if elementCount != 0 && len(m.Combc) == 0 {
+					m.Combc = make([]int32, 0, elementCount)
+				}
+				for iNdEx < postIndex {
+					var v int32
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return ErrIntOverflowRvt
+						}
+						if iNdEx >= l {
+							return io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						v |= int32(b&0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+					m.Combc = append(m.Combc, v)
+				}
+			} else {
+				return fmt.Errorf("proto: wrong wireType = %d for field Combc", wireType)
 			}
-			var msglen int
+		case 5:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Fg", wireType)
+			}
+			m.Fg = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowRvt
@@ -3800,28 +2950,68 @@ func (m *Cursor) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= int(b&0x7F) << shift
+				m.Fg |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			if msglen < 0 {
-				return ErrInvalidLengthRvt
+		case 6:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Bg", wireType)
 			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthRvt
+			m.Bg = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowRvt
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Bg |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
 			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
+		case 7:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field AttrMask", wireType)
 			}
-			if m.Attr == nil {
-				m.Attr = &Glyph{}
+			m.AttrMask = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowRvt
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.AttrMask |= int32(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
 			}
-			if err := m.Attr.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
+		case 8:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Width", wireType)
 			}
-			iNdEx = postIndex
+			m.Width = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowRvt
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Width |= int32(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
 		default:
 			iNdEx = preIndex
 			skippy, err := skipRvt(dAtA[iNdEx:])
@@ -3843,7 +3033,7 @@ func (m *Cursor) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *TcellMessage) Unmarshal(dAtA []byte) error {
+func (m *EventMessage) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -3866,10 +3056,10 @@ func (m *TcellMessage) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: TcellMessage: wiretype end group for non-group")
+			return fmt.Errorf("proto: EventMessage: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: TcellMessage: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: EventMessage: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -3905,7 +3095,7 @@ func (m *TcellMessage) Unmarshal(dAtA []byte) error {
 			if err := v.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
-			m.TcellEvent = &TcellMessage_Mouse{v}
+			m.Event = &EventMessage_Mouse{v}
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
@@ -3940,7 +3130,7 @@ func (m *TcellMessage) Unmarshal(dAtA []byte) error {
 			if err := v.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
-			m.TcellEvent = &TcellMessage_Key{v}
+			m.Event = &EventMessage_Key{v}
 			iNdEx = postIndex
 		case 3:
 			if wireType != 2 {
@@ -3975,7 +3165,7 @@ func (m *TcellMessage) Unmarshal(dAtA []byte) error {
 			if err := v.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
-			m.TcellEvent = &TcellMessage_Resize{v}
+			m.Event = &EventMessage_Resize{v}
 			iNdEx = postIndex
 		case 4:
 			if wireType != 2 {
@@ -4010,7 +3200,7 @@ func (m *TcellMessage) Unmarshal(dAtA []byte) error {
 			if err := v.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
-			m.TcellEvent = &TcellMessage_Paste{v}
+			m.Event = &EventMessage_Paste{v}
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -4076,7 +3266,7 @@ func (m *EventMouse) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.X |= int64(b&0x7F) << shift
+				m.X |= int32(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -4095,7 +3285,7 @@ func (m *EventMouse) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.Y |= int64(b&0x7F) << shift
+				m.Y |= int32(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -4309,7 +3499,7 @@ func (m *EventResize) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.Width |= int64(b&0x7F) << shift
+				m.Width |= int32(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -4328,7 +3518,7 @@ func (m *EventResize) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.Height |= int64(b&0x7F) << shift
+				m.Height |= int32(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}

@@ -4,57 +4,41 @@ package ptmux.rvt.v1;
 
 option go_package = "rvt";
 
-service Terminal {
+service Screen {
     rpc Share(stream ShareMessage) returns (stream ShareMessage);
 }
 
 message ShareMessage {
     string id = 1;
-    oneof Event {
+    oneof Message {
         InitMessage Init = 2;
-        StateMessage State = 3;
-        TcellMessage Tcell = 4;
+        RenderMessage Render = 3;
+        EventMessage Event = 4;
     }
 }
 
 message InitMessage {
 }
 
-message FdMessage {
-    uint32 fd = 1;
-    bool eof = 2;
-    bytes data = 3;
-}
-
-message StateMessage {
-    int64 cols = 1;
-    int64 rows = 2;
-    uint32 mode = 3;
-    string title = 4;
-    Cursor cursor = 5;
-    repeated Line lines = 6;
-}
-
-message Line {
-    repeated Glyph glyphs = 1;
+message RenderMessage {
+    int32 cols = 1;
+    int32 rows = 2;
+    repeated Glyph glyphs = 3;
 }
 
 message Glyph {
-    int32 rune = 1;
-    int32 mode = 2;
-    uint32 fg = 3;
-    uint32 bg = 4;
+    int32 x = 1;
+    int32 y = 2;
+    int32 mainc = 3;
+    repeated int32 combc = 4;
+    uint64 fg = 5;
+    uint64 bg = 6;
+    int32 attr_mask = 7;
+    int32 width = 8;
 }
 
-message Cursor {
-    int64 x = 1;
-    int64 y = 2;
-    uint32 state = 3;
-    Glyph attr = 4;
-}
-
-message TcellMessage {
-    oneof TcellEvent {
+message EventMessage {
+    oneof Event {
         EventMouse Mouse = 1;
         EventKey Key = 2;
         EventResize Resize = 3;
@@ -63,8 +47,8 @@ message TcellMessage {
 }
 
 message EventMouse {
-    int64 x = 1;
-    int64 y = 2;
+    int32 x = 1;
+    int32 y = 2;
     int32 button_mask = 3;
     int32 mod_mask = 4;
 }
@@ -76,8 +60,8 @@ message EventKey {
 }
 
 message EventResize {
-    int64 width = 1;
-    int64 height = 2;
+    int32 width = 1;
+    int32 height = 2;
 }
 
 message EventPaste {

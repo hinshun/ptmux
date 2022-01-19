@@ -5,24 +5,19 @@ import (
 	"os"
 
 	"github.com/gcla/gowid"
-	"github.com/gcla/gowid/widgets/columns"
-	"github.com/gcla/gowid/widgets/framed"
-	"github.com/gcla/gowid/widgets/pile"
-	"github.com/gcla/gowid/widgets/styled"
-	"github.com/gcla/gowid/widgets/text"
 	tcell "github.com/gdamore/tcell/v2"
-	"github.com/hinshun/ptmux/uiv2/widgets/terminal"
+	"github.com/hinshun/ptmux/rvt"
+	"github.com/hinshun/ptmux/ui/wid"
+	"github.com/hinshun/ptmux/ui/widgets/columns"
+	"github.com/hinshun/ptmux/ui/widgets/pane"
+	"github.com/hinshun/ptmux/ui/widgets/pile"
 )
 
 var log *os.File
 
 func init() {
-	log, _ = os.Create("console.log")
+	log, _ = os.Create("mux.log")
 }
-
-var (
-	Frame = framed.FrameRunes{'┌', '┐', '└', '┘', '─', '─', '│', '│'}
-)
 
 type IWidget interface {
 	gowid.ICompositeWidget
@@ -30,73 +25,62 @@ type IWidget interface {
 }
 
 type IMux interface {
-	SelectedPane() IPane
-	VerticalSplit(IPane, gowid.IApp)
-	HorizontalSplit(IPane, gowid.IApp)
-	KillPane(IPane, gowid.IApp)
+	FocusedPane(id string) *pane.Widget
+	VerticalSplit(id string, p *pane.Widget, app gowid.IApp)
+	HorizontalSplit(id string, p *pane.Widget, app gowid.IApp)
+	KillPane(id string, p *pane.Widget, app gowid.IApp)
 }
 
-type IPane interface {
-	gowid.IWidget
-}
+func (w *Widget) NewPane() *pane.Widget {
+	p := pane.New()
 
-type pane struct {
-	gowid.IContainerWidget
-	count int
-}
-
-var count = 0
-
-func NewPane() IPane {
-	var (
-		term gowid.IWidget
-		err  error
-	)
-	term, err = terminal.New()
-	if err != nil {
-		term = text.New(err.Error())
+	term := p.GetTerminal()
+	if term != nil {
+		term.OnProcessExited(gowid.WidgetCallback{"cb",
+			func(app gowid.IApp, _ gowid.IWidget) {
+				w.KillPane("self", p, app)
+			},
+		})
 	}
-	count++
-	return &pane{
-		IContainerWidget: &gowid.ContainerWidget{
-			IWidget: styled.NewFocus(
-				framed.New(term, framed.Options{
-					Frame:       Frame,
-					TitleWidget: text.New(fmt.Sprintf(" %d ", count)),
-				}),
-				gowid.MakeForeground(gowid.ColorBlue),
-			),
-			D: gowid.RenderWithWeight{1},
-		},
-		count: count,
-	}
-}
 
-func (p *pane) String() string {
-	return fmt.Sprintf("pane[%d]", p.count)
+	return p
 }
 
 type Widget struct {
 	gowid.IWidget
-	selectedPane IPane
 }
 
 var _ gowid.IWidget = (*Widget)(nil)
 
 func New() *Widget {
-	pane := NewPane()
-	return &Widget{
-		IWidget:      pane,
-		selectedPane: pane,
-	}
+	w := &Widget{}
+	w.IWidget = w.NewPane()
+	return w
 }
 
 func (w *Widget) String() string {
 	return fmt.Sprintf("%s", w.IWidget)
 }
 
-func (w *Widget) SelectedPane() IPane {
-	return w.selectedPane
+func (w *Widget) FocusedPane(id string) *pane.Widget {
+	return findFocusedPane(id, w.IWidget)
+}
+
+func findFocusedPane(id string, w gowid.IWidget) *pane.Widget {
+	if p, ok := w.(*pane.Widget); ok {
+		return p
+	}
+
+	if cw, ok := w.(gowid.IComposite); ok {
+		w = cw.SubWidget()
+	}
+
+	if cmf, ok := w.(wid.ICompositeMultipleFocus); ok {
+		focus := cmf.SubWidgets()[cmf.Focus(id)]
+		return findFocusedPane(id, focus)
+	}
+
+	return nil
 }
 
 func (w *Widget) SubWidget() gowid.IWidget {
@@ -115,63 +99,30 @@ func (w *Widget) UserInput(ev interface{}, size gowid.IRenderSize, focus gowid.S
 	return UserInput(w, ev, size, focus, app)
 }
 
-func MatchWidget(m gowid.IWidget) WidgetsPredicate {
-	if cm, ok := m.(gowid.IComposite); ok {
-		m = cm.SubWidget()
-	}
-	return func(widgets []gowid.IWidget) bool {
-		for _, w := range widgets {
-			if cw, ok := w.(gowid.IComposite); ok {
-				w = cw.SubWidget()
-			}
-			if w == m {
-				return true
-			}
-		}
-		return false
-	}
-}
-
-func (w *Widget) FocusPaneFunction(app gowid.IApp, focusParent gowid.IWidget) {
-	cw, ok := focusParent.(gowid.ICompositeMultipleFocus)
-	if ok {
-		focused := cw.SubWidgets()[cw.Focus()]
-		log.Write([]byte(fmt.Sprintf("focus pane function | parent %s | focus %d | child %s\n", focusParent, cw.Focus(), focused)))
-		p, ok := focused.(*pane)
-		if ok {
-			log.Write([]byte(fmt.Sprintf("[FocusPaneFunction] parent %s focus changed to %d\n", focusParent, cw.Focus())))
-			w.selectedPane = p
-		} else {
-			log.Write([]byte(fmt.Sprintf("focus parent focus subwidget is not pane %s\n", focused)))
-		}
-	} else {
-		log.Write([]byte(fmt.Sprintf("focus parent is not composite focus %s\n", focusParent)))
-	}
-}
-
-func (w *Widget) VerticalSplit(p IPane, app gowid.IApp) {
+func (w *Widget) VerticalSplit(id string, p *pane.Widget, app gowid.IApp) {
 	log.Write([]byte(fmt.Sprintf("vertical split %s\n", p)))
+	if p == nil {
+		return
+	}
 	parent := FindParentInHierarchy(w.IWidget, MatchWidget(p))
 
-	widgets := []gowid.IWidget{p, NewPane()}
+	widgets := []gowid.IWidget{p, w.NewPane()}
 	containers := make([]gowid.IContainerWidget, len(widgets))
 	for i, widget := range widgets {
 		containers[i] = widget.(gowid.IContainerWidget)
 	}
-	if _, ok := parent.(*pane); ok || parent == nil {
+	if _, ok := parent.(*pane.Widget); ok || parent == nil {
 		hlist := columns.New(containers)
-		hlist.OnFocusChanged(gowid.WidgetCallback{"cb", w.FocusPaneFunction})
-		hlist.SetFocus(app, 1)
+		hlist.SetFocus(id, 1)
 		w.SetSubWidget(&gowid.ContainerWidget{
-			       IWidget: hlist,
-			       D: gowid.RenderWithWeight{1},
+			IWidget: hlist,
+			D:       gowid.RenderWithWeight{1},
 		}, app)
 		return
 	}
 	if _, ok := parent.(*columns.Widget); !ok {
 		hlist := columns.New(containers)
-		hlist.OnFocusChanged(gowid.WidgetCallback{"cb", w.FocusPaneFunction})
-		hlist.SetFocus(app, 1)
+		hlist.SetFocus(id, 1)
 		widgets = []gowid.IWidget{
 			&gowid.ContainerWidget{
 				IWidget: hlist,
@@ -180,32 +131,33 @@ func (w *Widget) VerticalSplit(p IPane, app gowid.IApp) {
 		}
 	}
 
-	w.split(parent, p, app, widgets)
+	w.split(id, parent, p, app, widgets)
 }
 
-func (w *Widget) HorizontalSplit(p IPane, app gowid.IApp) {
+func (w *Widget) HorizontalSplit(id string, p *pane.Widget, app gowid.IApp) {
 	log.Write([]byte(fmt.Sprintf("horizontal split %s\n", p)))
+	if p == nil {
+		return
+	}
 	parent := FindParentInHierarchy(w.IWidget, MatchWidget(p))
 
-	widgets := []gowid.IWidget{p, NewPane()}
+	widgets := []gowid.IWidget{p, w.NewPane()}
 	containers := make([]gowid.IContainerWidget, len(widgets))
 	for i, widget := range widgets {
 		containers[i] = widget.(gowid.IContainerWidget)
 	}
-	if _, ok := parent.(*pane); ok || parent == nil {
+	if _, ok := parent.(*pane.Widget); ok || parent == nil {
 		vlist := pile.New(containers)
-		vlist.OnFocusChanged(gowid.WidgetCallback{"cb", w.FocusPaneFunction})
-		vlist.SetFocus(app, 1)
+		vlist.SetFocus(id, 1)
 		w.SetSubWidget(&gowid.ContainerWidget{
-			       IWidget: vlist,
-			       D: gowid.RenderWithWeight{1},
+			IWidget: vlist,
+			D:       gowid.RenderWithWeight{1},
 		}, app)
 		return
 	}
 	if _, ok := parent.(*pile.Widget); !ok {
 		vlist := pile.New(containers)
-		vlist.OnFocusChanged(gowid.WidgetCallback{"cb", w.FocusPaneFunction})
-		vlist.SetFocus(app, 1)
+		vlist.SetFocus(id, 1)
 		widgets = []gowid.IWidget{
 			&gowid.ContainerWidget{
 				IWidget: vlist,
@@ -214,11 +166,14 @@ func (w *Widget) HorizontalSplit(p IPane, app gowid.IApp) {
 		}
 	}
 
-	w.split(parent, p, app, widgets)
+	w.split(id, parent, p, app, widgets)
 }
 
-func (w *Widget) KillPane(p IPane, app gowid.IApp) {
+func (w *Widget) KillPane(id string, p *pane.Widget, app gowid.IApp) {
 	log.Write([]byte(fmt.Sprintf("kill pane %s\n", p)))
+	if p == nil {
+		return
+	}
 	parent := FindParentInHierarchy(w.IWidget, MatchWidget(p))
 
 	// If there is only one pane, then parent will be nil.
@@ -242,7 +197,7 @@ func (w *Widget) KillPane(p IPane, app gowid.IApp) {
 		}
 
 		parent.(gowid.ISettableSubWidgets).SetSubWidgets(append(children[:i], children[i+1:]...), app)
-		parent.(gowid.IFocus).SetFocus(app, focus)
+		parent.(wid.IFocus).SetFocus(id, focus)
 		log.Write([]byte(fmt.Sprintf("parent %s (more than 2 child) focus to %d\n", parent, focus)))
 		return
 	}
@@ -256,7 +211,6 @@ func (w *Widget) KillPane(p IPane, app gowid.IApp) {
 	// Otherwise, there is only one child left. The child should replace its parent.
 	grandparent := FindParentInHierarchy(w.IWidget, MatchWidget(parent))
 	if grandparent == nil {
-		w.selectedPane = sibling
 		w.SetSubWidget(sibling, app)
 		return
 	}
@@ -266,25 +220,42 @@ func (w *Widget) KillPane(p IPane, app gowid.IApp) {
 		}
 		return w == parent
 	})
-	insertSubwidgets(grandparent, app, i, []gowid.IWidget{sibling})
+	insertSubwidgets(id, grandparent, app, i, []gowid.IWidget{sibling})
 }
 
-func (w *Widget) split(parent gowid.IWidget, p IPane, app gowid.IApp, widgets []gowid.IWidget) {
+func (w *Widget) split(id string, parent gowid.IWidget, p *pane.Widget, app gowid.IApp, widgets []gowid.IWidget) {
 	i, _ := FindNextWidgetFrom(parent.(gowid.ICompositeMultiple), func(w gowid.IWidget) bool {
 		return w == p
 	})
-	insertSubwidgets(parent, app, i, widgets)
+	insertSubwidgets(id, parent, app, i, widgets)
 }
 
-func insertSubwidgets(w gowid.IWidget, app gowid.IApp, i int, widgets []gowid.IWidget) {
+func insertSubwidgets(id string, w gowid.IWidget, app gowid.IApp, i int, widgets []gowid.IWidget) {
 	children := w.(gowid.ICompositeMultiple).SubWidgets()
 	focus := i + len(widgets) - 1
 	if i+1 < len(children) {
 		widgets = append(widgets, children[i+1:]...)
 	}
 	w.(gowid.ISettableSubWidgets).SetSubWidgets(append(children[:i], widgets...), app)
-	w.(gowid.IFocus).SetFocus(app, focus)
+	w.(wid.IFocus).SetFocus(id, focus)
 	log.Write([]byte(fmt.Sprintf("insert into parent %s (%d widgets) focus to %d\n", w, len(widgets), focus)))
+}
+
+func MatchWidget(m gowid.IWidget) WidgetsPredicate {
+	if cm, ok := m.(gowid.IComposite); ok {
+		m = cm.SubWidget()
+	}
+	return func(widgets []gowid.IWidget) bool {
+		for _, w := range widgets {
+			if cw, ok := w.(gowid.IComposite); ok {
+				w = cw.SubWidget()
+			}
+			if w == m {
+				return true
+			}
+		}
+		return false
+	}
 }
 
 func UserInput(w IWidget, ev interface{}, size gowid.IRenderSize, focus gowid.Selector, app gowid.IApp) bool {
@@ -292,6 +263,13 @@ func UserInput(w IWidget, ev interface{}, size gowid.IRenderSize, focus gowid.Se
 	if handled {
 		return true
 	}
+
+	id := wid.DefaultID
+	if evr, ok := ev.(*rvt.RemoteEvent); ok {
+		ev = evr.Event
+		id = evr.ID
+	}
+
 	if evk, ok := ev.(*tcell.EventKey); ok {
 		switch evk.Key() {
 		case tcell.KeyRune:
@@ -299,11 +277,11 @@ func UserInput(w IWidget, ev interface{}, size gowid.IRenderSize, focus gowid.Se
 			handled = true
 			switch evk.Rune() {
 			case '%':
-				w.VerticalSplit(w.SelectedPane(), app)
+				w.VerticalSplit(id, w.FocusedPane(id), app)
 			case '"':
-				w.HorizontalSplit(w.SelectedPane(), app)
+				w.HorizontalSplit(id, w.FocusedPane(id), app)
 			case 'x':
-				w.KillPane(w.SelectedPane(), app)
+				w.KillPane(id, w.FocusedPane(id), app)
 			default:
 				handled = false
 			}

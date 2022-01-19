@@ -1,28 +1,37 @@
 package rvt
 
 import (
+	"context"
 	"errors"
 	"io"
 	"sync"
 
-	"github.com/hinshun/ptmux/pkg/terminal"
-	"github.com/hinshun/vt10x"
+	tcell "github.com/gdamore/tcell/v2"
 	"github.com/rs/zerolog"
 	"golang.org/x/sync/errgroup"
 )
 
-type Server struct {
-	term *terminal.Terminal
-	id   string
-	done chan struct{}
-	wg   sync.WaitGroup
+type Screen interface {
+	tcell.Screen
+
+	Subscribe(id string, ch chan string)
+	Unsubscribe(id string)
 }
 
-func NewServer(term *terminal.Terminal, id string) *Server {
+type Server struct {
+	ctx    context.Context
+	screen Screen
+	id     string
+	done   chan struct{}
+	wg     sync.WaitGroup
+}
+
+func NewServer(ctx context.Context, screen Screen, id string) *Server {
 	return &Server{
-		term: term,
-		id:   id,
-		done: make(chan struct{}),
+		ctx:    ctx,
+		screen: screen,
+		id:     id,
+		done:   make(chan struct{}),
 	}
 }
 
@@ -35,8 +44,8 @@ func (s *Server) Close() error {
 	return nil
 }
 
-func (s *Server) Share(srv Terminal_ShareServer) error {
-	ctx := srv.Context()
+func (s *Server) Share(srv Screen_ShareServer) error {
+	ctx := s.ctx
 
 	s.wg.Add(1)
 	recvMsgs := make(chan *ShareMessage)
@@ -76,7 +85,7 @@ func (s *Server) Share(srv Terminal_ShareServer) error {
 	eg := new(errgroup.Group)
 
 	var subscribeOnce sync.Once
-	updateCh := make(chan string, 16)
+	renderCh := make(chan string, 16)
 	eg.Go(func() error {
 		for {
 			var shareMsg *ShareMessage
@@ -89,14 +98,19 @@ func (s *Server) Share(srv Terminal_ShareServer) error {
 				return nil
 			}
 
-			switch shareMsg.GetEvent().(type) {
+			switch msg := shareMsg.Message.(type) {
 			case *ShareMessage_Init:
 				subscribeOnce.Do(func() {
-					zerolog.Ctx(ctx).Info().Str("id", shareMsg.Id).Msg("New terminal subscriber")
-					s.term.Subscribe(shareMsg.Id, updateCh)
-					updateCh <- "init"
+					zerolog.Ctx(ctx).Info().Str("id", shareMsg.Id).Msg("New screen subscriber")
+					s.screen.Subscribe(shareMsg.Id, renderCh)
+					renderCh <- "init"
 				})
-			case *ShareMessage_Tcell:
+			case *ShareMessage_Event:
+				ev := ProtoToEvent(msg.Event)
+				s.screen.PostEvent(&RemoteEvent{
+					ID:    shareMsg.Id,
+					Event: ev,
+				})
 			}
 		}
 	})
@@ -107,67 +121,16 @@ func (s *Server) Share(srv Terminal_ShareServer) error {
 			select {
 			case <-s.done:
 				return nil
-			case <-updateCh:
-				sendMsgs <- terminalShareState(s.id, s.term)
+			case <-renderCh:
+				sendMsgs <- &ShareMessage{
+					Id: s.id,
+					Message: &ShareMessage_Render{
+						Render: ScreenToRender(s.screen),
+					},
+				}
 			}
 		}
 	})
 
 	return eg.Wait()
-}
-
-func terminalShareState(id string, term *terminal.Terminal) *ShareMessage {
-	term.Lock()
-	cols, rows := term.Size()
-	mode := term.Mode()
-	title := term.Title()
-	cursor := term.Cursor()
-
-	var lines []*Line
-	for y := 0; y < rows; y++ {
-		line := &Line{}
-		for x := 0; x < cols; x++ {
-			glyph := term.Cell(x, y)
-			line.Glyphs = append(line.Glyphs, vtGlyphToProto(glyph))
-		}
-		lines = append(lines, line)
-	}
-	term.Unlock()
-
-	return &ShareMessage{
-		Id: id,
-		Event: &ShareMessage_State{
-			State: &StateMessage{
-				Cols:  int64(cols),
-				Rows:  int64(rows),
-				Mode:  uint32(mode),
-				Title: title,
-				Cursor: &Cursor{
-					X:     int64(cursor.X),
-					Y:     int64(cursor.Y),
-					State: uint32(cursor.State),
-					Attr:  vtGlyphToProto(cursor.Attr),
-				},
-				Lines: lines,
-			},
-		},
-	}
-}
-
-func vtGlyphToProto(glyph vt10x.Glyph) *Glyph {
-	return &Glyph{
-		Rune: int32(glyph.Char),
-		Mode: int32(glyph.Mode),
-		Fg:   uint32(glyph.FG),
-		Bg:   uint32(glyph.BG),
-	}
-}
-
-func protoGlyphToVT(glyph *Glyph) vt10x.Glyph {
-	return vt10x.Glyph{
-		Char: rune(glyph.Rune),
-		Mode: int16(glyph.Mode),
-		FG:   vt10x.Color(glyph.Fg),
-		BG:   vt10x.Color(glyph.Bg),
-	}
 }

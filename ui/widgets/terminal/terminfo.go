@@ -1,11 +1,18 @@
-package ui
+package terminal
 
 import (
+	"os"
 	"sync"
 
 	"github.com/gdamore/tcell/v2/terminfo"
 	"github.com/gdamore/tcell/v2/terminfo/dynamic"
 )
+
+var log *os.File
+
+func init() {
+	log, _ = os.OpenFile("term.log", os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
+}
 
 var cachedTerminfo map[string]*terminfo.Terminfo
 var cachedTerminfoMutex sync.Mutex
