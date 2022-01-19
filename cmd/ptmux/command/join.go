@@ -72,17 +72,7 @@ var joinCommand = &cli.Command{
 
 		eg, ctx := errgroup.WithContext(ctx)
 
-		msgs := make(chan *rvt.ShareMessage)
-
-		eg.Go(func() error {
-			return shareClient.Send(&rvt.ShareMessage{
-				Id: p.ID().String(),
-				Event: &rvt.ShareMessage_Init{
-					Init: &rvt.InitMessage{},
-				},
-			})
-		})
-
+		recvMsgs := make(chan *rvt.ShareMessage)
 		eg.Go(func() error {
 			for {
 				shareMsg, err := shareClient.Recv()
@@ -95,9 +85,32 @@ var joinCommand = &cli.Command{
 
 				select {
 				case <-ctx.Done():
-				case msgs <- shareMsg:
+				case recvMsgs <- shareMsg:
 				}
 			}
+		})
+
+		sendMsgs := make(chan *rvt.ShareMessage)
+		eg.Go  (func() error {
+			defer shareClient.CloseSend()
+			for msg := range sendMsgs {
+				err := shareClient.Send(msg)
+				if err != nil {
+					zerolog.Ctx(ctx).Error().Err(err).Msg("failed to send share message")
+					continue
+				}
+			}
+			return nil
+		})
+
+		eg.Go(func() error {
+			sendMsgs <- &rvt.ShareMessage{
+				Id: p.ID().String(),
+				Event: &rvt.ShareMessage_Init{
+					Init: &rvt.InitMessage{},
+				},
+			}
+			return nil
 		})
 
 		view := rvt.NewView()
@@ -115,7 +128,7 @@ var joinCommand = &cli.Command{
 				select {
 				case <-ctx.Done():
 					return nil
-				case shareMsg = <-msgs:
+				case shareMsg = <-recvMsgs:
 				}
 				if shareMsg == nil {
 					return nil
@@ -127,7 +140,6 @@ var joinCommand = &cli.Command{
 					view.Update(evt.State)
 					view.Unlock()
 					renderCh <- struct{}{}
-
 					readyOnce.Do(func() {
 						close(ready)
 					})
@@ -135,9 +147,30 @@ var joinCommand = &cli.Command{
 			}
 		})
 
+		tcellMsgs := make(chan *rvt.TcellMessage, 1)
+		eg.Go  (func() error {
+			for {
+				var tcellMsg *rvt.TcellMessage
+				select {
+				case <-ctx.Done():
+					return nil
+				case tcellMsg = <-tcellMsgs:
+				}
+				if tcellMsg == nil {
+					return nil
+				}
+				sendMsgs <- &rvt.ShareMessage{
+					Id: p.ID().String(),
+					Event: &rvt.ShareMessage_Tcell{
+						Tcell: tcellMsg,
+					},
+				}
+			}
+		})
+
 		eg.Go(func() error {
 			<-ready
-			return r.Loop(ctx)
+			return r.Loop(ctx, tcellMsgs)
 		})
 
 		eg.Go(func() error {

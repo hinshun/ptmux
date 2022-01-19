@@ -46,7 +46,7 @@ var hostCommand = &cli.Command{
 		t.Subscribe("host", renderCh)
 
 		eg.Go(func() error {
-			return u.Loop(ctx)
+			return u.Loop(ctx, nil)
 		})
 
 		eg.Go(func() error {

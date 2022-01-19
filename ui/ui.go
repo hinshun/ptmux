@@ -9,6 +9,7 @@ import (
 
 	tcell "github.com/gdamore/tcell/v2"
 	"github.com/gdamore/tcell/v2/terminfo"
+	"github.com/hinshun/ptmux/rvt"
 	"github.com/hinshun/vt10x"
 	"github.com/rs/zerolog"
 )
@@ -64,7 +65,11 @@ func New(view vt10x.View) (*UI, error) {
 	}, nil
 }
 
-func (u *UI) Loop(ctx context.Context) error {
+func (u *UI) PostEvent(event tcell.Event) error {
+	return u.screen.PostEvent(event)
+}
+
+func (u *UI) Loop(ctx context.Context, tcellMsgs chan<- *rvt.TcellMessage) error {
 	eventCh := make(chan tcell.Event, 4)
 	go func() {
 		defer close(eventCh)
@@ -86,12 +91,16 @@ func (u *UI) Loop(ctx context.Context) error {
 			}
 			return nil
 		case event := <-eventCh:
-			switch ev := event.(type) {
+			switch evt := event.(type) {
 			case *tcell.EventResize:
-				u.width, u.height = ev.Size()
-				u.height--
-				u.view.Resize(u.width, u.height)
-				u.screen.Sync()
+				_, ok := u.view.(vt10x.Terminal)
+				if ok { // Host
+					u.width, u.height = evt.Size()
+					u.height--
+					u.view.Resize(u.width, u.height)
+					u.screen.Sync()
+				} else { // Client
+				}
 			default:
 				t, ok := u.view.(vt10x.Terminal)
 				if ok { // Host
@@ -103,7 +112,6 @@ func (u *UI) Loop(ctx context.Context) error {
 						}
 					}
 				} else { // Client
-
 				}
 			}
 		}

@@ -96,6 +96,7 @@ func (s *Server) Share(srv Terminal_ShareServer) error {
 					s.term.Subscribe(shareMsg.Id, updateCh)
 					updateCh <- "init"
 				})
+			case *ShareMessage_Tcell:
 			}
 		}
 	})
