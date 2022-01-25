@@ -2,7 +2,6 @@ package mux
 
 import (
 	"fmt"
-	"os"
 
 	"github.com/gcla/gowid"
 	tcell "github.com/gdamore/tcell/v2"
@@ -12,12 +11,6 @@ import (
 	"github.com/hinshun/ptmux/ui/widgets/pane"
 	"github.com/hinshun/ptmux/ui/widgets/pile"
 )
-
-var log *os.File
-
-func init() {
-	log, _ = os.Create("mux.log")
-}
 
 type IWidget interface {
 	gowid.ICompositeWidget
@@ -98,7 +91,6 @@ func (w *Widget) SubWidgetSize(size gowid.IRenderSize, focus gowid.Selector, app
 }
 
 func (w *Widget) VerticalSplit(id string, p *pane.Widget, app gowid.IApp) {
-	log.Write([]byte(fmt.Sprintf("vertical split %s\n", p)))
 	if p == nil {
 		return
 	}
@@ -139,7 +131,6 @@ func (w *Widget) VerticalSplit(id string, p *pane.Widget, app gowid.IApp) {
 }
 
 func (w *Widget) HorizontalSplit(id string, p *pane.Widget, app gowid.IApp) {
-	log.Write([]byte(fmt.Sprintf("horizontal split %s\n", p)))
 	if p == nil {
 		return
 	}
@@ -183,7 +174,6 @@ func (w *Widget) HorizontalSplit(id string, p *pane.Widget, app gowid.IApp) {
 }
 
 func (w *Widget) KillPane(id string, p *pane.Widget, app gowid.IApp) {
-	log.Write([]byte(fmt.Sprintf("kill pane %s\n", p)))
 	if p == nil {
 		return
 	}
@@ -209,13 +199,23 @@ func (w *Widget) KillPane(id string, p *pane.Widget, app gowid.IApp) {
 		}
 
 		f := parent.(wid.IFocus)
-		oldFocus := f.Focus(id)
-		ids := f.ReverseFocus()[oldFocus]
-		parent.(gowid.ISettableSubWidgets).SetSubWidgets(append(children[:i], children[i+1:]...), app)
-		for _, id := range ids {
-			f.SetFocus(id, focus)
+		rfocus := f.ReverseFocus()
+
+		// Build the list of ids for each widget that will be shifted by one after
+		// the delete.
+		var shifts [][]string
+		for j := focus + 1; j < len(children); j++ {
+			shifts = append(shifts, rfocus[j])
 		}
-		log.Write([]byte(fmt.Sprintf("parent %s (more than 2 child) focus to %d\n", parent, focus)))
+
+		parent.(gowid.ISettableSubWidgets).SetSubWidgets(append(children[:i], children[i+1:]...), app)
+
+		// Shift all ids affected by the delete.
+		for j, ids := range shifts {
+			for _, id := range ids {
+				f.SetFocus(id, j+focus)
+			}
+		}
 		return
 	}
 
@@ -223,7 +223,6 @@ func (w *Widget) KillPane(id string, p *pane.Widget, app gowid.IApp) {
 	if i > 0 {
 		sibling = children[0]
 	}
-	log.Write([]byte(fmt.Sprintf("sibling %s\n", sibling)))
 
 	// Otherwise, there is only one child left. The child should replace its parent.
 	grandparent := FindParentInHierarchy(w.IWidget, MatchWidget(parent))
@@ -253,11 +252,12 @@ func (w *Widget) split(id string, parent gowid.IWidget, p *pane.Widget, app gowi
 		return w == p
 	})
 
-	// Build the list of ids for each widget that will be shifted by one after
-	// the insert.
 	f := parent.(wid.IFocus)
 	oldFocus := f.Focus(id)
 	rfocus := f.ReverseFocus()
+
+	// Build the list of ids for each widget that will be shifted by one after
+	// the insert.
 	var shifts [][]string
 	for j := oldFocus + 1; j < len(parent.(gowid.ICompositeMultiple).SubWidgets()); j++ {
 		shifts = append(shifts, rfocus[j])
@@ -269,13 +269,12 @@ func (w *Widget) split(id string, parent gowid.IWidget, p *pane.Widget, app gowi
 	// First shift all ids affected by the insert.
 	for j, ids := range shifts {
 		for _, id := range ids {
-			parent.(wid.IFocus).SetFocus(id, focus+j+1)
+			f.SetFocus(id, focus+j+1)
 		}
 	}
 
 	// Focus the original id that executed the split.
-	parent.(wid.IFocus).SetFocus(id, focus)
-	rfocus = parent.(wid.IFocus).ReverseFocus()
+	f.SetFocus(id, focus)
 }
 
 func insertSubwidgets(id string, w gowid.IWidget, app gowid.IApp, i int, widgets []gowid.IWidget) (focus int) {
@@ -321,7 +320,6 @@ func (w *Widget) UserInput(ev interface{}, size gowid.IRenderSize, focus gowid.S
 	if evk, ok := evt.(*tcell.EventKey); ok {
 		switch evk.Key() {
 		case tcell.KeyRune:
-			log.Write([]byte(fmt.Sprintf("before [%c]: %s\n", evk.Rune(), w)))
 			handled = true
 			switch evk.Rune() {
 			case '%':
@@ -333,7 +331,6 @@ func (w *Widget) UserInput(ev interface{}, size gowid.IRenderSize, focus gowid.S
 			default:
 				handled = false
 			}
-			log.Write([]byte(fmt.Sprintf("after [%c]: %s\n\n", evk.Rune(), w)))
 		}
 	}
 	return handled
@@ -342,12 +339,10 @@ func (w *Widget) UserInput(ev interface{}, size gowid.IRenderSize, focus gowid.S
 type WidgetsPredicate func([]gowid.IWidget) bool
 
 func FindParentInHierarchy(w gowid.IWidget, pred WidgetsPredicate) gowid.IWidget {
-	log.Write([]byte("find parent in hierarchy\n"))
 	var res, parent gowid.IWidget
 	next := []gowid.IWidget{w}
 	for len(next) > 0 {
 		w := next[0]
-		log.Write([]byte(fmt.Sprintf("next parent %s\n", w)))
 		next = next[1:]
 		if cw, ok := w.(gowid.IComposite); ok {
 			w = cw.SubWidget()
@@ -362,7 +357,6 @@ func FindParentInHierarchy(w gowid.IWidget, pred WidgetsPredicate) gowid.IWidget
 			next = append(next, widgets...)
 		}
 	}
-	log.Write([]byte(fmt.Sprintf("return %s\n", res)))
 	return res
 }
 

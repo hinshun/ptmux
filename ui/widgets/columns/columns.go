@@ -3,7 +3,6 @@ package columns
 
 import (
 	"fmt"
-	"os"
 	"strings"
 
 	"github.com/gcla/gowid"
@@ -13,12 +12,6 @@ import (
 	"github.com/hinshun/ptmux/rvt"
 	"github.com/hinshun/ptmux/ui/wid"
 )
-
-var log *os.File
-
-func init() {
-	log, _ = os.Create("columns.log")
-}
 
 type IWidget interface {
 	gowid.IWidget
@@ -219,7 +212,6 @@ func (w *Widget) UserInput(ev interface{}, size gowid.IRenderSize, focus gowid.S
 	rfocus := w.ReverseFocus()
 	subfocus := w.Focus(id)
 	if evm, ok := evt.(*tcell.EventMouse); ok {
-		log.Write([]byte(fmt.Sprintf("mouse: %v\n", ev)))
 		curX := 0
 		mx, _ := evm.Position()
 		for i, c := range subSizes {
