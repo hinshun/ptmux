@@ -27,15 +27,17 @@ type IWidget interface {
 }
 
 type Widget struct {
-	focus   map[string]int
-	widgets []gowid.IContainerWidget
 	gowid.AddressProvidesID
+	widgets   []gowid.IContainerWidget
+	focus     map[string]int
+	defaultID string
 }
 
-func New(widgets []gowid.IContainerWidget) *Widget {
+func New(defaultID string, widgets []gowid.IContainerWidget) *Widget {
 	return &Widget{
-		focus:   make(map[string]int),
-		widgets: widgets,
+		widgets:   widgets,
+		focus:     make(map[string]int),
+		defaultID: defaultID,
 	}
 }
 
@@ -105,10 +107,6 @@ func (w *Widget) Selectable() bool {
 	return gowid.SelectableIfAnySubWidgetsAre(w)
 }
 
-func (w *Widget) UserInput(ev interface{}, size gowid.IRenderSize, focus gowid.Selector, app gowid.IApp) bool {
-	return UserInput(w, ev, size, focus, app)
-}
-
 func (w *Widget) Render(size gowid.IRenderSize, focus gowid.Selector, app gowid.IApp) gowid.ICanvas {
 	return Render(w, size, focus, app)
 }
@@ -135,15 +133,15 @@ func (w *Widget) SubWidgetSize(size gowid.IRenderSize, newY int, sub gowid.IWidg
 	return gowid.ComputeVerticalSubSizeUnsafe(size, dim, -1, newY)
 }
 
-func UserInput(w IWidget, ev interface{}, size gowid.IRenderSize, focus gowid.Selector, app gowid.IApp) bool {
+func (w *Widget) UserInput(ev interface{}, size gowid.IRenderSize, focus gowid.Selector, app gowid.IApp) bool {
 	handled := false
 	subs := w.SubWidgets()
 
 	// An array of IRenderBoxes
 	ss, ss2 := RenderedChildrenSizes(w, size, focus, app)
 
-	id := wid.DefaultID
 	evt := ev
+	id := w.defaultID
 	if evr, ok := ev.(*rvt.RemoteEvent); ok {
 		evt = evr.Event
 		id = evr.ID

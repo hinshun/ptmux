@@ -32,7 +32,7 @@ type IMux interface {
 }
 
 func (w *Widget) NewPane() *pane.Widget {
-	p := pane.New()
+	p := pane.New(w.defaultID)
 
 	term := p.GetTerminal()
 	if term != nil {
@@ -48,12 +48,13 @@ func (w *Widget) NewPane() *pane.Widget {
 
 type Widget struct {
 	gowid.IWidget
+	defaultID string
 }
 
 var _ gowid.IWidget = (*Widget)(nil)
 
-func New() *Widget {
-	w := &Widget{}
+func New(defaultID string) *Widget {
+	w := &Widget{defaultID: defaultID}
 	w.IWidget = w.NewPane()
 	return w
 }
@@ -95,10 +96,6 @@ func (w *Widget) SubWidgetSize(size gowid.IRenderSize, focus gowid.Selector, app
 	return w.SubWidget().RenderSize(size, focus, app)
 }
 
-func (w *Widget) UserInput(ev interface{}, size gowid.IRenderSize, focus gowid.Selector, app gowid.IApp) bool {
-	return UserInput(w, ev, size, focus, app)
-}
-
 func (w *Widget) VerticalSplit(id string, p *pane.Widget, app gowid.IApp) {
 	log.Write([]byte(fmt.Sprintf("vertical split %s\n", p)))
 	if p == nil {
@@ -112,7 +109,7 @@ func (w *Widget) VerticalSplit(id string, p *pane.Widget, app gowid.IApp) {
 		containers[i] = widget.(gowid.IContainerWidget)
 	}
 	if _, ok := parent.(*pane.Widget); ok || parent == nil {
-		hlist := columns.New(containers)
+		hlist := columns.New(w.defaultID, containers)
 		hlist.SetFocus(id, 1)
 		w.SetSubWidget(&gowid.ContainerWidget{
 			IWidget: hlist,
@@ -121,7 +118,7 @@ func (w *Widget) VerticalSplit(id string, p *pane.Widget, app gowid.IApp) {
 		return
 	}
 	if _, ok := parent.(*columns.Widget); !ok {
-		hlist := columns.New(containers)
+		hlist := columns.New(w.defaultID, containers)
 		hlist.SetFocus(id, 1)
 		widgets = []gowid.IWidget{
 			&gowid.ContainerWidget{
@@ -147,7 +144,7 @@ func (w *Widget) HorizontalSplit(id string, p *pane.Widget, app gowid.IApp) {
 		containers[i] = widget.(gowid.IContainerWidget)
 	}
 	if _, ok := parent.(*pane.Widget); ok || parent == nil {
-		vlist := pile.New(containers)
+		vlist := pile.New(w.defaultID, containers)
 		vlist.SetFocus(id, 1)
 		w.SetSubWidget(&gowid.ContainerWidget{
 			IWidget: vlist,
@@ -156,7 +153,7 @@ func (w *Widget) HorizontalSplit(id string, p *pane.Widget, app gowid.IApp) {
 		return
 	}
 	if _, ok := parent.(*pile.Widget); !ok {
-		vlist := pile.New(containers)
+		vlist := pile.New(w.defaultID, containers)
 		vlist.SetFocus(id, 1)
 		widgets = []gowid.IWidget{
 			&gowid.ContainerWidget{
@@ -258,19 +255,20 @@ func MatchWidget(m gowid.IWidget) WidgetsPredicate {
 	}
 }
 
-func UserInput(w IWidget, ev interface{}, size gowid.IRenderSize, focus gowid.Selector, app gowid.IApp) bool {
+func (w *Widget) UserInput(ev interface{}, size gowid.IRenderSize, focus gowid.Selector, app gowid.IApp) bool {
 	handled := gowid.UserInputIfSelectable(w.SubWidget(), ev, size, focus, app)
 	if handled {
 		return true
 	}
 
-	id := wid.DefaultID
+	evt := ev
+	id := w.defaultID
 	if evr, ok := ev.(*rvt.RemoteEvent); ok {
-		ev = evr.Event
+		evt = evr.Event
 		id = evr.ID
 	}
 
-	if evk, ok := ev.(*tcell.EventKey); ok {
+	if evk, ok := evt.(*tcell.EventKey); ok {
 		switch evk.Key() {
 		case tcell.KeyRune:
 			log.Write([]byte(fmt.Sprintf("before [%c]: %s\n", evk.Rune(), w)))

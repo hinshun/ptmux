@@ -35,19 +35,21 @@ type IWidget interface {
 }
 
 type Widget struct {
-	focus        map[string]int
+	gowid.AddressProvidesID
 	widgets      []gowid.IContainerWidget
+	focus        map[string]int
 	widthHelper  []bool // optimizations to save frequent array allocations during use
 	widthHelper2 []bool
-	gowid.AddressProvidesID
+	defaultID    string
 }
 
-func New(widgets []gowid.IContainerWidget) *Widget {
+func New(defaultID string, widgets []gowid.IContainerWidget) *Widget {
 	return &Widget{
-		focus:        make(map[string]int),
 		widgets:      widgets,
+		focus:        make(map[string]int),
 		widthHelper:  make([]bool, len(widgets)),
 		widthHelper2: make([]bool, len(widgets)),
+		defaultID:    defaultID,
 	}
 }
 
@@ -118,10 +120,6 @@ func (w *Widget) SetDimensions(dimensions []gowid.IWidgetDimension, app gowid.IA
 
 func (w *Widget) Selectable() bool {
 	return gowid.SelectableIfAnySubWidgetsAre(w)
-}
-
-func (w *Widget) UserInput(ev interface{}, size gowid.IRenderSize, focus gowid.Selector, app gowid.IApp) bool {
-	return UserInput(w, ev, size, focus, app)
 }
 
 // RenderSize computes the size of this widget when it renders. This is
@@ -205,15 +203,15 @@ func SubWidgetSize(size gowid.IRenderSize, newX int, dim gowid.IWidgetDimension)
 	return subSize
 }
 
-func UserInput(w IWidget, ev interface{}, size gowid.IRenderSize, focus gowid.Selector, app gowid.IApp) bool {
+func (w *Widget) UserInput(ev interface{}, size gowid.IRenderSize, focus gowid.Selector, app gowid.IApp) bool {
 	handled := false
 	subSizes := w.WidgetWidths(size, focus, app)
 
 	dims := w.Dimensions()
 	subs := w.SubWidgets()
 
-	id := wid.DefaultID
 	evt := ev
+	id := w.defaultID
 	if evr, ok := ev.(*rvt.RemoteEvent); ok {
 		evt = evr.Event
 		id = evr.ID

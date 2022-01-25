@@ -23,9 +23,9 @@ type Widget struct {
 	term *terminal.Widget
 }
 
-func New() *Widget {
+func New(id string) *Widget {
 	var view gowid.IWidget
-	term, err := terminal.New()
+	term, err := terminal.New(id)
 	if err != nil {
 		view = text.New(err.Error())
 	} else {
@@ -39,7 +39,7 @@ func New() *Widget {
 
 	w := &Widget{
 		ContainerWidget: &gowid.ContainerWidget{
-			IWidget: styled.New(frame),
+			IWidget: styled.New(id, frame),
 			D: gowid.RenderWithWeight{1},
 		},
 		term: term,

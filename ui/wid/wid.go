@@ -7,10 +7,6 @@ import (
 	tcell "github.com/gdamore/tcell/v2"
 )
 
-const (
-	DefaultID = "self"
-)
-
 type IFocus interface {
 	Focus(id string) int
 	SetFocus(id string, i int)
@@ -22,8 +18,7 @@ type ICompositeMultipleFocus interface {
 }
 
 type IP2PApp interface {
-	IDs() []string
-	FocusPalette(id string) gowid.ICellStyler
+	FocusPalette(id string) (string, gowid.ICellStyler)
 	SetClickTarget(k tcell.ButtonMask, w gowid.IIdentityWidget) bool
 	ClickTarget(func(tcell.ButtonMask, gowid.IIdentityWidget))
 	GetMouseState() gowid.MouseState
@@ -62,26 +57,35 @@ func WithFocus(a gowid.IApp, ids []string) gowid.IApp {
 	}
 	ids = FilterFocus(fa.ids, ids)
 	return &app{
-		IApp:    fa.IApp,
-		ids:     ids,
-		palette: fa.palette,
-		clickTargets: fa.clickTargets,
-		mouseState: fa.mouseState,
+		IApp:           fa.IApp,
+		ids:            ids,
+		palette:        fa.palette,
+		clickTargets:   fa.clickTargets,
+		mouseState:     fa.mouseState,
 		lastMouseState: fa.lastMouseState,
 	}
 }
 
-func (a *app) IDs() []string {
-	sort.Strings(a.ids)
-	return a.ids
-}
-
-func (a *app) FocusPalette(id string) gowid.ICellStyler {
+func (a *app) FocusPalette(lastID string) (string, gowid.ICellStyler) {
 	if len(a.ids) == 0 {
-		return nil
+		return "", nil
 	}
-	sort.Strings(a.ids)
-	return a.palette[id]
+
+	isLastFocused := false
+	for _, id := range a.ids {
+		if id == lastID {
+			isLastFocused = true
+			break
+		}
+	}
+
+	id := lastID
+	if !isLastFocused {
+		sort.Strings(a.ids)
+		id = a.ids[0]
+	}
+
+	return id, a.palette[id]
 }
 
 func (a *app) SetClickTarget(k tcell.ButtonMask, w gowid.IIdentityWidget) bool {

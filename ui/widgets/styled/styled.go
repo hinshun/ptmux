@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/gcla/gowid"
+	"github.com/hinshun/ptmux/rvt"
 	"github.com/hinshun/ptmux/ui/wid"
 )
 
@@ -13,11 +14,13 @@ type Widget struct {
 	gowid.IWidget
 	*gowid.Callbacks
 	gowid.SubWidgetCallbacks
+	defaultID, lastID string
 }
 
-func New(inner gowid.IWidget) *Widget {
+func New(defaultID string, inner gowid.IWidget) *Widget {
 	return &Widget{
-		IWidget: inner,
+		IWidget:   inner,
+		defaultID: defaultID,
 	}
 }
 
@@ -43,16 +46,19 @@ func (w *Widget) RenderSize(size gowid.IRenderSize, focus gowid.Selector, app go
 }
 
 func (w *Widget) UserInput(ev interface{}, size gowid.IRenderSize, focus gowid.Selector, app gowid.IApp) bool {
+	id := w.defaultID
+	if evr, ok := ev.(*rvt.RemoteEvent); ok {
+		id = evr.ID
+	}
+	w.lastID = id
+
 	return gowid.UserInputIfSelectable(w.IWidget, ev, size, focus, app)
 }
 
 func (w *Widget) Render(size gowid.IRenderSize, focus gowid.Selector, app gowid.IApp) gowid.ICanvas {
 	var palette gowid.ICellStyler
 	if p, ok := app.(wid.IP2PApp); ok {
-		ids := p.IDs()
-		if len(ids) > 0 {
-			palette = p.FocusPalette(ids[0])
-		}
+		_, palette = p.FocusPalette(w.lastID)
 	}
 
 	canvas := w.SubWidget().Render(size, focus, app)

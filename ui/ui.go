@@ -13,8 +13,8 @@ type UI struct {
 	screen *screen
 }
 
-func New() (*UI, error) {
-	peerstyle := peerstyled.New(mux.New())
+func New(id string) (*UI, error) {
+	peerstyle := peerstyled.New(id, mux.New(id))
 
 	s, err := newScreen(peerstyle)
 	if err != nil {

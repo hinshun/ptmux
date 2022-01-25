@@ -16,20 +16,22 @@ var (
 
 type Widget struct {
 	gowid.IWidget
+	defaultID    string
 	paletteIdx   int
 	palette      map[string]gowid.ICellStyler
 	clickTargets map[string]gowid.ClickTargets
 	lastMouse    map[string]gowid.MouseState
 }
 
-func New(inner gowid.IWidget) *Widget {
+func New(defaultID string, inner gowid.IWidget) *Widget {
 	w := &Widget{
 		IWidget:      inner,
+		defaultID:    defaultID,
 		palette:      make(map[string]gowid.ICellStyler),
 		clickTargets: make(map[string]gowid.ClickTargets),
 		lastMouse:    make(map[string]gowid.MouseState),
 	}
-	w.Add(wid.DefaultID)
+	w.Add(defaultID)
 	return w
 }
 
@@ -51,8 +53,8 @@ func (w *Widget) Render(size gowid.IRenderSize, focus gowid.Selector, app gowid.
 }
 
 func (w *Widget) UserInput(ev interface{}, size gowid.IRenderSize, focus gowid.Selector, app gowid.IApp) bool {
-	id := wid.DefaultID
 	evt := ev
+	id := w.defaultID
 	if evr, ok := ev.(*rvt.RemoteEvent); ok {
 		id = evr.ID
 		evt = evr.Event

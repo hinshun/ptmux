@@ -28,22 +28,8 @@ var hostCommand = &cli.Command{
 		logger := zerolog.Ctx(ctx).Output(zerolog.ConsoleWriter{Out: logs})
 		ctx = logger.WithContext(ctx)
 
-		ui, err := ui.New()
-		if err != nil {
-			return err
-		}
-
 		ctx, cancel := context.WithCancel(ctx)
 		eg, ctx := errgroup.WithContext(ctx)
-
-		eg.Go(func() error {
-			defer cancel()
-			ui.Loop()
-			return nil
-		})
-
-		opts := []grpc.ServerOption{}
-		grpcSrv := grpc.NewServer(opts...)
 
 		eg.Go(func() error {
 			p, err := p2p.New(ctx)
@@ -52,8 +38,22 @@ var hostCommand = &cli.Command{
 			}
 			defer p.Close()
 
+			ui, err := ui.New(p.ID().String())
+			if err != nil {
+				return err
+			}
+
+			eg.Go(func() error {
+				defer cancel()
+				ui.Loop()
+				return nil
+			})
+
 			screenSrv := rvt.NewServer(ctx, ui.Screen(), p.ID().String())
 			defer screenSrv.Close()
+
+			opts := []grpc.ServerOption{}
+			grpcSrv := grpc.NewServer(opts...)
 
 			rvt.RegisterScreenServer(grpcSrv, screenSrv)
 

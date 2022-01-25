@@ -38,29 +38,31 @@ type IWidget interface {
 type Widget struct {
 	gowidterminal.IHotKeyProvider
 	gowidterminal.IHotKeyPersistence
-	Callbacks      *gowid.Callbacks
-	terminfo       *terminfo.Terminfo
-	vt             *vt.VT
-	canvas         *Canvas
-	width, height  int
-	title          string
-	lastID         string
-	hotKeyDown     bool
-	hotKeyDownTime time.Time
-	hotKeyTimer    *time.Timer
-	isScrolling    bool
+	Callbacks         *gowid.Callbacks
+	terminfo          *terminfo.Terminfo
+	vt                *vt.VT
+	canvas            *Canvas
+	width, height     int
+	title             string
+	defaultID, lastID string
+	hotKeyDown        bool
+	hotKeyDownTime    time.Time
+	hotKeyTimer       *time.Timer
+	isScrolling       bool
 	gowid.IsSelectable
 }
 
 type Options struct {
+	DefaultID         string
 	Env               []string
 	HotKey            gowidterminal.IHotKeyProvider
 	HotKeyPersistence gowidterminal.IHotKeyPersistence
 }
 
-func New() (*Widget, error) {
+func New(defaultID string) (*Widget, error) {
 	return NewExt(Options{
-		Env: os.Environ(),
+		DefaultID: defaultID,
+		Env:       os.Environ(),
 	})
 }
 
@@ -101,7 +103,7 @@ func NewExt(opts Options) (*Widget, error) {
 		IHotKeyPersistence: opts.HotKeyPersistence,
 		Callbacks:          gowid.NewCallbacks(),
 		terminfo:           ti,
-		lastID:             wid.DefaultID,
+		defaultID:          opts.DefaultID,
 	}, nil
 }
 
@@ -275,7 +277,7 @@ func (w *Widget) RenderTerminal(cols, rows int, app gowid.IApp) {
 	}
 
 	p := app.(wid.IP2PApp)
-	palette := p.FocusPalette(w.lastID)
+	id, palette := p.FocusPalette(w.lastID)
 	if palette != nil && w.vt.CursorVisible() {
 		f, _, _ := palette.GetStyle(app)
 		paletteFG, _ := f.ToTCellColor(app.GetColorMode())
@@ -296,9 +298,9 @@ func (w *Widget) RenderTerminal(cols, rows int, app gowid.IApp) {
 		}
 		w.canvas.SetCellAt(cursor.X, cursor.Y, cell)
 
-		text := "egg"
-		if w.lastID != wid.DefaultID {
-			text = "boo"
+		text := id
+		if len(text) > 6 {
+			text = text[:6]
 		}
 		for i := 0; i < len(text); i++ {
 			cell = gowid.MakeCell(rune(text[i]), gowid.ColorWhite, paletteFG, gowid.StyleNone)
@@ -320,8 +322,8 @@ func (w *Widget) UserInput(ev interface{}, size gowid.IRenderSize, focus gowid.S
 	// True if input should be sent to tty.
 	passToTty := true
 
-	id := wid.DefaultID
 	evt := ev
+	id := w.defaultID
 	if evr, ok := ev.(*rvt.RemoteEvent); ok {
 		id = evr.ID
 		evt = evr.Event
