@@ -52,23 +52,9 @@ type Widget struct {
 	gowid.IsSelectable
 }
 
-type Options struct {
-	DefaultID         string
-	Env               []string
-	HotKey            gowidterminal.IHotKeyProvider
-	HotKeyPersistence gowidterminal.IHotKeyPersistence
-}
-
-func New(defaultID string) (*Widget, error) {
-	return NewExt(Options{
-		DefaultID: defaultID,
-		Env:       os.Environ(),
-	})
-}
-
-func NewExt(opts Options) (*Widget, error) {
+func New(defaultID, lastID string) (*Widget, error) {
 	var term string
-	for _, s := range opts.Env {
+	for _, s := range os.Environ() {
 		if strings.HasPrefix(s, "TERM=") {
 			term = s[len("TERM="):]
 			break
@@ -90,20 +76,13 @@ func NewExt(opts Options) (*Widget, error) {
 		return nil, err
 	}
 
-	if opts.HotKey == nil {
-		opts.HotKey = gowidterminal.HotKey{tcell.KeyCtrlB}
-	}
-
-	if opts.HotKeyPersistence == nil {
-		opts.HotKeyPersistence = gowidterminal.HotKeyDuration{time.Second}
-	}
-
 	return &Widget{
-		IHotKeyProvider:    opts.HotKey,
-		IHotKeyPersistence: opts.HotKeyPersistence,
+		IHotKeyProvider:    gowidterminal.HotKey{tcell.KeyCtrlB},
+		IHotKeyPersistence: gowidterminal.HotKeyDuration{time.Second},
 		Callbacks:          gowid.NewCallbacks(),
 		terminfo:           ti,
-		defaultID:          opts.DefaultID,
+		defaultID:          defaultID,
+		lastID:             lastID,
 	}, nil
 }
 
@@ -216,7 +195,7 @@ func (w *Widget) TouchTerminal(width, height int, app gowid.IApp) {
 				select {
 				case <-w.vt.Done():
 					app.Run(gowid.RunFunction(func(app gowid.IApp) {
-						gowid.RunWidgetCallbacks(w.Callbacks, ProcessExited{}, app, w)
+						gowid.RunWidgetCallbacks(w.Callbacks, ProcessExited{}, app, w, w.lastID)
 					}))
 					return
 				case <-renderCh:
@@ -283,28 +262,33 @@ func (w *Widget) RenderTerminal(cols, rows int, app gowid.IApp) {
 		paletteFG, _ := f.ToTCellColor(app.GetColorMode())
 
 		cursor := w.vt.Cursor()
-		glyph := w.vt.Cell(cursor.X, cursor.Y)
+		if cursor.X > 0 && cursor.X < cols && cursor.Y > 0 && cursor.Y < rows {
+			glyph := w.vt.Cell(cursor.X, cursor.Y)
 
-		bg := int(glyph.BG)
-		if glyph.BG == vt10x.DefaultBG {
-			bg = int(tcell.ColorDefault)
-		}
+			bg := int(glyph.BG)
+			if glyph.BG == vt10x.DefaultBG {
+				bg = int(tcell.ColorDefault)
+			}
 
-		var cell gowid.Cell
-		if glyph.Char == ' ' {
-			cell = gowid.MakeCell('⎸', paletteFG, getColor256(bg), gowid.StyleBold)
-		} else {
-			cell = gowid.MakeCell(glyph.Char, paletteFG, getColor256(bg), gowid.StyleReverse)
-		}
-		w.canvas.SetCellAt(cursor.X, cursor.Y, cell)
+			var cell gowid.Cell
+			if glyph.Char == ' ' {
+				cell = gowid.MakeCell('⎸', paletteFG, getColor256(bg), gowid.StyleBold)
+			} else {
+				cell = gowid.MakeCell(glyph.Char, paletteFG, getColor256(bg), gowid.StyleReverse)
+			}
+			w.canvas.SetCellAt(cursor.X, cursor.Y, cell)
 
-		text := id
-		if len(text) > 6 {
-			text = text[:6]
-		}
-		for i := 0; i < len(text); i++ {
-			cell = gowid.MakeCell(rune(text[i]), gowid.ColorWhite, paletteFG, gowid.StyleNone)
-			w.canvas.SetCellAt(cursor.X+i, cursor.Y+1, cell)
+			text := id
+			if len(text) > 6 {
+				text = text[:6]
+			}
+			for i := 0; i < len(text); i++ {
+				if cursor.X+i >= cols || cursor.Y+1 >= rows {
+					continue
+				}
+				cell = gowid.MakeCell(rune(text[i]), gowid.ColorWhite, paletteFG, gowid.StyleNone)
+				w.canvas.SetCellAt(cursor.X+i, cursor.Y+1, cell)
+			}
 		}
 	}
 }

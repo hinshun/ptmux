@@ -22,8 +22,8 @@ func New(id string) (*UI, error) {
 	}
 
 	app, err := gowid.NewApp(gowid.AppArgs{
-		Screen:            s,
-		View:              peerstyle,
+		Screen: s,
+		View:   peerstyle,
 		// EnableMouseMotion: true,
 	})
 	if err != nil {

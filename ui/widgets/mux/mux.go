@@ -31,14 +31,15 @@ type IMux interface {
 	KillPane(id string, p *pane.Widget, app gowid.IApp)
 }
 
-func (w *Widget) NewPane() *pane.Widget {
-	p := pane.New(w.defaultID)
+func (w *Widget) NewPane(id string) *pane.Widget {
+	p := pane.New(w.defaultID, id)
 
 	term := p.GetTerminal()
 	if term != nil {
-		term.OnProcessExited(gowid.WidgetCallback{"cb",
-			func(app gowid.IApp, _ gowid.IWidget) {
-				w.KillPane("self", p, app)
+		term.OnProcessExited(gowid.WidgetCallbackExt{"cb",
+			func(app gowid.IApp, _ gowid.IWidget, data ...interface{}) {
+				lastID := data[0].(string)
+				w.KillPane(lastID, p, app)
 			},
 		})
 	}
@@ -55,7 +56,7 @@ var _ gowid.IWidget = (*Widget)(nil)
 
 func New(defaultID string) *Widget {
 	w := &Widget{defaultID: defaultID}
-	w.IWidget = w.NewPane()
+	w.IWidget = w.NewPane(defaultID)
 	return w
 }
 
@@ -103,13 +104,18 @@ func (w *Widget) VerticalSplit(id string, p *pane.Widget, app gowid.IApp) {
 	}
 	parent := FindParentInHierarchy(w.IWidget, MatchWidget(p))
 
-	widgets := []gowid.IWidget{p, w.NewPane()}
+	widgets := []gowid.IWidget{p, w.NewPane(id)}
 	containers := make([]gowid.IContainerWidget, len(widgets))
 	for i, widget := range widgets {
 		containers[i] = widget.(gowid.IContainerWidget)
 	}
-	if _, ok := parent.(*pane.Widget); ok || parent == nil {
+
+	if parent == nil {
 		hlist := columns.New(w.defaultID, containers)
+		ids := app.(wid.IP2PApp).IDs()
+		for _, id := range ids {
+			hlist.SetFocus(id, 0)
+		}
 		hlist.SetFocus(id, 1)
 		w.SetSubWidget(&gowid.ContainerWidget{
 			IWidget: hlist,
@@ -117,6 +123,7 @@ func (w *Widget) VerticalSplit(id string, p *pane.Widget, app gowid.IApp) {
 		}, app)
 		return
 	}
+	// If parent is not a column.
 	if _, ok := parent.(*columns.Widget); !ok {
 		hlist := columns.New(w.defaultID, containers)
 		hlist.SetFocus(id, 1)
@@ -138,13 +145,18 @@ func (w *Widget) HorizontalSplit(id string, p *pane.Widget, app gowid.IApp) {
 	}
 	parent := FindParentInHierarchy(w.IWidget, MatchWidget(p))
 
-	widgets := []gowid.IWidget{p, w.NewPane()}
+	widgets := []gowid.IWidget{p, w.NewPane(id)}
 	containers := make([]gowid.IContainerWidget, len(widgets))
 	for i, widget := range widgets {
 		containers[i] = widget.(gowid.IContainerWidget)
 	}
-	if _, ok := parent.(*pane.Widget); ok || parent == nil {
+
+	ids := app.(wid.IP2PApp).IDs()
+	if parent == nil {
 		vlist := pile.New(w.defaultID, containers)
+		for _, id := range ids {
+			vlist.SetFocus(id, 0)
+		}
 		vlist.SetFocus(id, 1)
 		w.SetSubWidget(&gowid.ContainerWidget{
 			IWidget: vlist,
@@ -152,8 +164,12 @@ func (w *Widget) HorizontalSplit(id string, p *pane.Widget, app gowid.IApp) {
 		}, app)
 		return
 	}
+	// If parent is not a pile.
 	if _, ok := parent.(*pile.Widget); !ok {
 		vlist := pile.New(w.defaultID, containers)
+		for _, id := range ids {
+			vlist.SetFocus(id, 0)
+		}
 		vlist.SetFocus(id, 1)
 		widgets = []gowid.IWidget{
 			&gowid.ContainerWidget{
@@ -178,7 +194,6 @@ func (w *Widget) KillPane(id string, p *pane.Widget, app gowid.IApp) {
 		app.Quit()
 		return
 	}
-
 	i, _ := FindNextWidgetFrom(parent.(gowid.ICompositeMultiple), func(w gowid.IWidget) bool {
 		return w == p
 	})
@@ -193,8 +208,13 @@ func (w *Widget) KillPane(id string, p *pane.Widget, app gowid.IApp) {
 			focus = i - 1
 		}
 
+		f := parent.(wid.IFocus)
+		oldFocus := f.Focus(id)
+		ids := f.ReverseFocus()[oldFocus]
 		parent.(gowid.ISettableSubWidgets).SetSubWidgets(append(children[:i], children[i+1:]...), app)
-		parent.(wid.IFocus).SetFocus(id, focus)
+		for _, id := range ids {
+			f.SetFocus(id, focus)
+		}
 		log.Write([]byte(fmt.Sprintf("parent %s (more than 2 child) focus to %d\n", parent, focus)))
 		return
 	}
@@ -211,31 +231,61 @@ func (w *Widget) KillPane(id string, p *pane.Widget, app gowid.IApp) {
 		w.SetSubWidget(sibling, app)
 		return
 	}
+
 	i, _ = FindNextWidgetFrom(grandparent.(gowid.ICompositeMultiple), func(w gowid.IWidget) bool {
 		if cw, ok := w.(gowid.IComposite); ok {
 			w = cw.SubWidget()
 		}
 		return w == parent
 	})
-	insertSubwidgets(id, grandparent, app, i, []gowid.IWidget{sibling})
+
+	f := grandparent.(wid.IFocus)
+	oldFocus := f.Focus(id)
+	ids := f.ReverseFocus()[oldFocus]
+	focus := insertSubwidgets(id, grandparent, app, i, []gowid.IWidget{sibling})
+	for _, id := range ids {
+		f.SetFocus(id, focus)
+	}
 }
 
 func (w *Widget) split(id string, parent gowid.IWidget, p *pane.Widget, app gowid.IApp, widgets []gowid.IWidget) {
 	i, _ := FindNextWidgetFrom(parent.(gowid.ICompositeMultiple), func(w gowid.IWidget) bool {
 		return w == p
 	})
-	insertSubwidgets(id, parent, app, i, widgets)
+
+	// Build the list of ids for each widget that will be shifted by one after
+	// the insert.
+	f := parent.(wid.IFocus)
+	oldFocus := f.Focus(id)
+	rfocus := f.ReverseFocus()
+	var shifts [][]string
+	for j := oldFocus + 1; j < len(parent.(gowid.ICompositeMultiple).SubWidgets()); j++ {
+		shifts = append(shifts, rfocus[j])
+	}
+
+	// Insert the new subwidgets.
+	focus := insertSubwidgets(id, parent, app, i, widgets)
+
+	// First shift all ids affected by the insert.
+	for j, ids := range shifts {
+		for _, id := range ids {
+			parent.(wid.IFocus).SetFocus(id, focus+j+1)
+		}
+	}
+
+	// Focus the original id that executed the split.
+	parent.(wid.IFocus).SetFocus(id, focus)
+	rfocus = parent.(wid.IFocus).ReverseFocus()
 }
 
-func insertSubwidgets(id string, w gowid.IWidget, app gowid.IApp, i int, widgets []gowid.IWidget) {
+func insertSubwidgets(id string, w gowid.IWidget, app gowid.IApp, i int, widgets []gowid.IWidget) (focus int) {
 	children := w.(gowid.ICompositeMultiple).SubWidgets()
-	focus := i + len(widgets) - 1
+	focus = i + len(widgets) - 1
 	if i+1 < len(children) {
 		widgets = append(widgets, children[i+1:]...)
 	}
 	w.(gowid.ISettableSubWidgets).SetSubWidgets(append(children[:i], widgets...), app)
-	w.(wid.IFocus).SetFocus(id, focus)
-	log.Write([]byte(fmt.Sprintf("insert into parent %s (%d widgets) focus to %d\n", w, len(widgets), focus)))
+	return focus
 }
 
 func MatchWidget(m gowid.IWidget) WidgetsPredicate {

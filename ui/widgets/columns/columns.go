@@ -31,7 +31,6 @@ type IWidget interface {
 	RenderSubWidgets(size gowid.IRenderSize, focus gowid.Selector, rfocus [][]string, app gowid.IApp) []gowid.ICanvas
 	RenderedSubWidgetsSizes(size gowid.IRenderSize, focus gowid.Selector, app gowid.IApp) []gowid.IRenderBox
 	WidgetWidths(size gowid.IRenderSize, focus gowid.Selector, app gowid.IApp) []int
-	ReverseFocus() [][]string
 }
 
 type Widget struct {

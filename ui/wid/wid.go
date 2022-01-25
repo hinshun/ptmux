@@ -10,6 +10,7 @@ import (
 type IFocus interface {
 	Focus(id string) int
 	SetFocus(id string, i int)
+	ReverseFocus() [][]string
 }
 
 type ICompositeMultipleFocus interface {
@@ -18,6 +19,7 @@ type ICompositeMultipleFocus interface {
 }
 
 type IP2PApp interface {
+	IDs() []string
 	FocusPalette(id string) (string, gowid.ICellStyler)
 	SetClickTarget(k tcell.ButtonMask, w gowid.IIdentityWidget) bool
 	ClickTarget(func(tcell.ButtonMask, gowid.IIdentityWidget))
@@ -66,6 +68,11 @@ func WithFocus(a gowid.IApp, ids []string) gowid.IApp {
 	}
 }
 
+func (a *app) IDs() []string {
+	sort.Strings(a.ids)
+	return a.ids
+}
+
 func (a *app) FocusPalette(lastID string) (string, gowid.ICellStyler) {
 	if len(a.ids) == 0 {
 		return "", nil
@@ -81,8 +88,7 @@ func (a *app) FocusPalette(lastID string) (string, gowid.ICellStyler) {
 
 	id := lastID
 	if !isLastFocused {
-		sort.Strings(a.ids)
-		id = a.ids[0]
+		id = a.IDs()[0]
 	}
 
 	return id, a.palette[id]

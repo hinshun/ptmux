@@ -23,9 +23,9 @@ type Widget struct {
 	term *terminal.Widget
 }
 
-func New(id string) *Widget {
+func New(defaultID, lastID string) *Widget {
 	var view gowid.IWidget
-	term, err := terminal.New(id)
+	term, err := terminal.New(defaultID, lastID)
 	if err != nil {
 		view = text.New(err.Error())
 	} else {
@@ -39,8 +39,8 @@ func New(id string) *Widget {
 
 	w := &Widget{
 		ContainerWidget: &gowid.ContainerWidget{
-			IWidget: styled.New(id, frame),
-			D: gowid.RenderWithWeight{1},
+			IWidget: styled.New(defaultID, lastID, frame),
+			D:       gowid.RenderWithWeight{1},
 		},
 		term: term,
 	}
@@ -48,10 +48,8 @@ func New(id string) *Widget {
 	if term != nil {
 		term.OnTitleChanged(gowid.WidgetCallbackExt{"cb",
 			func(app gowid.IApp, w gowid.IWidget, data ...interface{}) {
-				title, ok := data[0].(string)
-				if ok {
-					frame.SetTitle(title, app)
-				}
+				title := data[0].(string)
+				frame.SetTitle(title, app)
 			},
 		})
 	}

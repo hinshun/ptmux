@@ -17,10 +17,11 @@ type Widget struct {
 	defaultID, lastID string
 }
 
-func New(defaultID string, inner gowid.IWidget) *Widget {
+func New(defaultID, lastID string, inner gowid.IWidget) *Widget {
 	return &Widget{
 		IWidget:   inner,
 		defaultID: defaultID,
+		lastID:    lastID,
 	}
 }
 
