@@ -1,11 +1,14 @@
 package ui
 
 import (
+	"io/ioutil"
+
 	"github.com/gcla/gowid"
 	tcell "github.com/gdamore/tcell/v2"
 	"github.com/hinshun/ptmux/rvt"
 	"github.com/hinshun/ptmux/ui/widgets/mux"
 	"github.com/hinshun/ptmux/ui/widgets/peerstyled"
+	"github.com/sirupsen/logrus"
 )
 
 type UI struct {
@@ -21,9 +24,13 @@ func New(id string) (*UI, error) {
 		return nil, err
 	}
 
+	log := logrus.New()
+	log.SetOutput(ioutil.Discard)
+
 	app, err := gowid.NewApp(gowid.AppArgs{
 		Screen: s,
 		View:   peerstyle,
+		Log:    log,
 		// EnableMouseMotion: true,
 	})
 	if err != nil {
