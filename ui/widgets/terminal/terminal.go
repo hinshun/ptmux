@@ -1,6 +1,7 @@
 package terminal
 
 import (
+	"fmt"
 	"io"
 	"os"
 	"strings"
@@ -133,10 +134,7 @@ func (w *Widget) Scroll(dir ScrollDir, page bool, lines int) {
 	} else {
 		lines = w.canvas.ScrollBuffer(dir, false, gwutil.SomeInt(lines))
 	}
-	// Scrolling is now true if:
-	// (a) was previously
-	// or (b) wasn't but we scrolled more than one line
-	w.isScrolling = w.isScrolling || lines != 0
+	w.isScrolling = true
 }
 
 func (w *Widget) ResetScroll() {
@@ -255,6 +253,18 @@ func (w *Widget) RenderTerminal(cols, rows int, app gowid.IApp) {
 		}
 	}
 
+	if w.Scrolling() {
+		text := fmt.Sprintf("[%d/%d]", w.canvas.Offset, w.canvas.Canvas.BoxRows()-w.canvas.BoxRows())
+		for i := 0; i < len(text); i++ {
+			x := cols - len(text) + i
+			if x < 0 || x >= cols {
+				continue
+			}
+			cell := gowid.MakeCell(rune(text[i]), gowid.ColorBlack, gowid.ColorYellow, gowid.StyleNone)
+			w.canvas.SetCellAt(x, 0, cell)
+		}
+	}
+
 	p := app.(wid.IP2PApp)
 	id, palette := p.FocusPalette(w.lastID)
 	if palette != nil && w.vt.CursorVisible() {
@@ -313,46 +323,45 @@ func (w *Widget) UserInput(ev interface{}, size gowid.IRenderSize, focus gowid.S
 		evt = evr.Event
 	}
 	if evk, ok := evt.(*tcell.EventKey); ok {
-		if w.Scrolling() {
-			// If we're currently scrolling, then this user input should
-			// never be sent to the terminal. It's for controlling or exiting
-			// scrolling.
+		// if w.Scrolling() {
+		// 	// If we're currently scrolling, then this user input should
+		// 	// never be sent to the terminal. It's for controlling or exiting
+		// 	// scrolling.
+		// 	passToTty = false
+		// 	handled = true
+		// 	switch evk.Key() {
+		// 	case tcell.KeyPgUp:
+		// 		w.Scroll(ScrollUp, true, 0)
+		// 	case tcell.KeyPgDn:
+		// 		w.Scroll(ScrollDown, true, 0)
+		// 	case tcell.KeyUp:
+		// 		w.Scroll(ScrollUp, false, 1)
+		// 	case tcell.KeyDown:
+		// 		w.Scroll(ScrollDown, false, 1)
+		// 	case tcell.KeyEnter:
+		// 		w.ResetScroll()
+		// 	case tcell.KeyRune:
+		// 		switch evk.Rune() {
+		// 		case 'q', 'Q':
+		// 			w.ResetScroll()
+		// 		}
+		// 	default:
+		// 		handled = false
+		// 	}
+		if w.HotKeyActive() {
 			passToTty = false
-			handled = true
-			switch evk.Key() {
-			case tcell.KeyPgUp:
-				w.Scroll(ScrollUp, true, 0)
-			case tcell.KeyPgDn:
-				w.Scroll(ScrollDown, true, 0)
-			case tcell.KeyUp:
-				w.Scroll(ScrollUp, false, 1)
-			case tcell.KeyDown:
-				w.Scroll(ScrollDown, false, 1)
-			case tcell.KeyRune:
-				switch evk.Rune() {
-				case 'q', 'Q':
-					w.ResetScroll()
-				}
-			default:
-				handled = false
-			}
-		} else if w.HotKeyActive() {
-			passToTty = false
-			handled = true
-			deactivate := true
+			deactivate := false
 			switch evk.Key() {
 			case w.HotKey():
-			case tcell.KeyPgUp:
-				w.Scroll(ScrollUp, true, 0)
-			case tcell.KeyPgDn:
-				w.Scroll(ScrollDown, true, 0)
-			case tcell.KeyUp:
-				w.Scroll(ScrollUp, false, 1)
-			case tcell.KeyDown:
-				w.Scroll(ScrollDown, false, 1)
-			default:
-				handled = false
-				deactivate = false
+				handled = true
+				deactivate = true
+			case tcell.KeyRune:
+				// switch evk.Rune() {
+				// case '[':
+				// 	w.Scroll(ScrollUp, false, 0)
+				// 	handled = true
+				// 	deactivate = true
+				// }
 			}
 			if deactivate {
 				w.SetHotKeyActive(app, false)

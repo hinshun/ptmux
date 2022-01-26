@@ -54,12 +54,11 @@ func WithP2PContext(a gowid.IApp, palette map[string]gowid.ICellStyler, clickTar
 
 func WithFocus(a gowid.IApp, ids []string) gowid.IApp {
 	fa, ok := a.(*app)
-	if !ok {
-		fa.IApp = a
+	if ok {
+		ids = FilterFocus(fa.ids, ids)
 	}
-	ids = FilterFocus(fa.ids, ids)
 	return &app{
-		IApp:           fa.IApp,
+		IApp:           a,
 		ids:            ids,
 		palette:        fa.palette,
 		clickTargets:   fa.clickTargets,
