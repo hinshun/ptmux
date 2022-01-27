@@ -239,16 +239,12 @@ func (w *Widget) RenderTerminal(cols, rows int, app gowid.IApp) {
 	for y := 0; y < rows; y++ {
 		for x := 0; x < cols; x++ {
 			glyph := w.vt.Cell(x, y)
-
-			fg, bg := int(glyph.FG), int(glyph.BG)
-			if glyph.FG == vt10x.DefaultFG {
-				fg = int(tcell.ColorDefault)
-			}
-			if glyph.BG == vt10x.DefaultBG {
-				bg = int(tcell.ColorDefault)
-			}
-
-			cell := gowid.MakeCell(glyph.Char, getColor256(fg), getColor256(bg), gowid.StyleNone)
+			cell := gowid.MakeCell(
+				glyph.Char,
+				convertVTColor(glyph.FG, true),
+				convertVTColor(glyph.BG, false),
+				gowid.StyleNone,
+			)
 			w.canvas.SetCellAt(x, y, cell)
 		}
 	}
@@ -275,16 +271,11 @@ func (w *Widget) RenderTerminal(cols, rows int, app gowid.IApp) {
 		if cursor.X > 0 && cursor.X < cols && cursor.Y > 0 && cursor.Y < rows {
 			glyph := w.vt.Cell(cursor.X, cursor.Y)
 
-			bg := int(glyph.BG)
-			if glyph.BG == vt10x.DefaultBG {
-				bg = int(tcell.ColorDefault)
-			}
-
 			var cell gowid.Cell
 			if glyph.Char == ' ' {
-				cell = gowid.MakeCell('⎸', paletteFG, getColor256(bg), gowid.StyleBold)
+				cell = gowid.MakeCell('⎸', paletteFG, convertVTColor(glyph.BG, false), gowid.StyleBold)
 			} else {
-				cell = gowid.MakeCell(glyph.Char, paletteFG, getColor256(bg), gowid.StyleReverse)
+				cell = gowid.MakeCell(glyph.Char, paletteFG, convertVTColor(glyph.BG, false), gowid.StyleReverse)
 			}
 			w.canvas.SetCellAt(cursor.X, cursor.Y, cell)
 
@@ -397,10 +388,12 @@ func (w *Widget) UserInput(ev interface{}, size gowid.IRenderSize, focus gowid.S
 	return handled
 }
 
-// getColor256 returns the tcell color for a number between 0 and 255
-func getColor256(color int) gowid.TCellColor {
-	if color == 0 {
+func convertVTColor(color vt10x.Color, fg bool) gowid.TCellColor {
+	if (fg && color == vt10x.DefaultFG) || (!fg && color == vt10x.DefaultBG) {
 		return gowid.ColorDefault
+	} else if color < 256 {
+		return gowid.MakeTCellColorExt(tcell.PaletteColor(int(color)))
+	} else {
+		return gowid.MakeTCellColorExt(tcell.Color(color) | tcell.ColorValid | tcell.ColorIsRGB)
 	}
-	return gowid.MakeTCellColorExt(tcell.PaletteColor(color))
 }

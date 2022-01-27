@@ -7,7 +7,7 @@ require (
 	github.com/gcla/gowid v1.3.0
 	github.com/gdamore/tcell/v2 v2.4.0
 	github.com/gogo/protobuf v1.3.2
-	github.com/hinshun/vt10x v0.0.0-20220119200601-820417d04eec
+	github.com/hinshun/vt10x v0.0.0-20220127042424-3ca73d0126d7
 	github.com/libp2p/go-libp2p v0.17.0
 	github.com/libp2p/go-libp2p-core v0.13.0
 	github.com/libp2p/go-libp2p-discovery v0.6.0
@@ -15,7 +15,7 @@ require (
 	github.com/libp2p/go-libp2p-kad-dht v0.15.0
 	github.com/multiformats/go-multiaddr v0.5.0 // indirect
 	github.com/rs/zerolog v1.26.1
-	github.com/sirupsen/logrus v1.8.1 // indirect
+	github.com/sirupsen/logrus v1.8.1
 	github.com/urfave/cli/v2 v2.3.0
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
 	google.golang.org/grpc v1.43.0
