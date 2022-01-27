@@ -15,7 +15,7 @@ docker run --rm -it hinshun/ptmux
 ## Installation
 
 ```sh
-go install github.com/hinshun/ptmux@latest
+go install .
 ```
 
 ### Key Bindings
