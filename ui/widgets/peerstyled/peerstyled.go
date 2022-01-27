@@ -11,6 +11,8 @@ var (
 	Stylers = []gowid.ICellStyler{
 		gowid.MakeForeground(gowid.ColorBlue),
 		gowid.MakeForeground(gowid.ColorGreen),
+		gowid.MakeForeground(gowid.ColorPurple),
+		gowid.MakeForeground(gowid.ColorOrange),
 	}
 )
 
