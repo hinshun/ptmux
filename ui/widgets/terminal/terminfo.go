@@ -21,14 +21,14 @@ func init() {
 // avoid the extra process.
 func findTerminfo(name string) (*terminfo.Terminfo, error) {
 	cachedTerminfoMutex.Lock()
+	defer cachedTerminfoMutex.Unlock()
+
 	if ti, ok := cachedTerminfo[name]; ok {
-		cachedTerminfoMutex.Unlock()
 		return ti, nil
 	}
 	ti, _, e := dynamic.LoadTerminfo(name)
 	if e == nil {
 		cachedTerminfo[name] = ti
-		cachedTerminfoMutex.Unlock()
 		return ti, nil
 	}
 	ti, e = terminfo.LookupTerminfo(name)

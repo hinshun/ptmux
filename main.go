@@ -6,7 +6,7 @@ import (
 	"os"
 	"syscall"
 
-	"github.com/hinshun/ptmux/cmd/ptmux/command"
+	"github.com/hinshun/ptmux/command"
 	"github.com/rs/zerolog"
 )
 

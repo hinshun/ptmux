@@ -1,0 +1,28 @@
+fs default() {
+	build
+	dockerPush "hinshun/ptmux"
+}
+
+fs golang() {
+	image "golang:1.17-alpine"
+}
+
+fs src() {
+	local "." with includePatterns("go.mod", "go.sum", "**/*.go")
+}
+
+fs _ptmux() {
+	golang
+	run "go build -o ./dist/ptmux ." with option {
+		dir "/in"
+		mount src "/in" with readonly
+		mount scratch "/in/dist" as ptmux
+	}
+}
+
+fs build() {
+	image "alpine"
+	copy ptmux "/" "/usr/local/bin/"
+	entrypoint "/usr/local/bin/ptmux"
+	env "SHELL" "/bin/sh"
+}
