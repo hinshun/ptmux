@@ -12,6 +12,7 @@ import (
 	tcell "github.com/gdamore/tcell/v2"
 	"github.com/hinshun/ptmux/pkg/p2p"
 	"github.com/hinshun/ptmux/rvt"
+	"github.com/libp2p/go-libp2p-core/network"
 	gostream "github.com/libp2p/go-libp2p-gostream"
 	"github.com/rs/zerolog"
 	cli "github.com/urfave/cli/v2"
@@ -57,6 +58,7 @@ func Attach(c *cli.Context) error {
 
 			zerolog.Ctx(ctx).Info().Msgf("Discovered peer %s", peer.ID)
 			dialerOpt := grpc.WithDialer(func(id string, ttl time.Duration) (net.Conn, error) {
+				ctx = network.WithUseTransient(ctx, "hole-punch")
 				return gostream.Dial(ctx, p, peer.ID, "/ptmux/1.0.0")
 			})
 			conn, err = grpc.DialContext(ctx, peer.ID.String(), dialerOpt, grpc.WithInsecure())
